@@ -1,3 +1,36 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@media print {
+  /* Hide header, navigation, and buttons when printing */
+  header,
+  button,
+  select,
+  nav {
+    display: none !important;
+  }
+
+  /* Remove background colors and shadows for clean printing */
+  body {
+    background: white !important;
+  }
+
+  .shadow,
+  .shadow-sm,
+  .shadow-md,
+  .shadow-lg {
+    box-shadow: none !important;
+  }
+
+  /* Ensure page breaks work well */
+  .page-break-avoid {
+    break-inside: avoid;
+  }
+
+  /* Print each day's section cleanly */
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+}
