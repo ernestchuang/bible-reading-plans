@@ -46,8 +46,8 @@ export function DailyView({
         </div>
       </div>
 
-      {/* Reading cards - compact horizontal row */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2">
+      {/* Reading cards - 2 rows of 5 */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         {readings.map((reading, i) => (
           <ReadingCard
             key={reading.listId}

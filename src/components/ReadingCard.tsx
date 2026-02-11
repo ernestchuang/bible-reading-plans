@@ -45,7 +45,7 @@ export function ReadingCard({ reading, isActive, isCompleted, onClick, onToggleC
           <p className={`text-[10px] font-semibold uppercase tracking-wide ${isCompleted ? 'text-green-600' : 'text-gray-500'}`}>
             {reading.listName}
           </p>
-          <p className={`text-sm font-bold ${isCompleted ? 'text-green-700 line-through' : 'text-gray-900'}`}>
+          <p className={`text-sm font-bold whitespace-nowrap ${isCompleted ? 'text-green-700 line-through' : 'text-gray-900'}`}>
             {reading.book} {reading.chapter}
           </p>
         </div>
