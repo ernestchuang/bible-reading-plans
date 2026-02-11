@@ -59,7 +59,9 @@ function App() {
             translation={state.translation}
             dayIndex={viewDayIndex}
             startDate={state.startDate}
+            currentDayIndex={state.currentDayIndex}
             onDayChange={handleDayChange}
+            onGoToToday={() => setViewDayOffset(0)}
           />
         )}
 

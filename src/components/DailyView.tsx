@@ -6,7 +6,9 @@ interface DailyViewProps {
   translation: Translation;
   dayIndex: number;
   startDate: string;
+  currentDayIndex: number;
   onDayChange: (delta: number) => void;
+  onGoToToday: () => void;
 }
 
 export function DailyView({
@@ -14,8 +16,11 @@ export function DailyView({
   translation,
   dayIndex,
   startDate,
+  currentDayIndex,
   onDayChange,
+  onGoToToday,
 }: DailyViewProps) {
+  const isToday = dayIndex === currentDayIndex;
   const currentDate = new Date(startDate + 'T00:00:00');
   currentDate.setDate(currentDate.getDate() + dayIndex);
 
@@ -35,20 +40,29 @@ export function DailyView({
       </div>
 
       {/* Navigation buttons */}
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex items-center justify-center gap-3">
         <button
           type="button"
           onClick={() => onDayChange(-1)}
           className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
         >
-          &larr; Previous Day
+          &larr; Prev
         </button>
+        {!isToday && (
+          <button
+            type="button"
+            onClick={onGoToToday}
+            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
+          >
+            Today
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onDayChange(1)}
           className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
         >
-          Next Day &rarr;
+          Next &rarr;
         </button>
       </div>
 

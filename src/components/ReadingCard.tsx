@@ -40,6 +40,9 @@ export function ReadingCard({ reading, translation }: ReadingCardProps) {
       <p className="text-lg font-bold text-gray-900">
         {reading.book} {reading.chapter}
       </p>
+      <p className="text-xs text-gray-400 mt-2">
+        Click to read &rarr;
+      </p>
     </a>
   );
 }
