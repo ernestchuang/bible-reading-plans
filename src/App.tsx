@@ -11,46 +11,43 @@ import { SettingsPanel } from './components/SettingsPanel';
 function App() {
   const state = useReadingPlan();
   const [activeTab, setActiveTab] = useState('Today');
-  const [viewDayOffset, setViewDayOffset] = useState(0);
   const [activeReading, setActiveReading] = useState<Reading | null>(null);
 
-  const viewDayIndex = state.currentDayIndex + viewDayOffset;
-
-  const dailyReadings = useMemo(
-    () => getReadingsForDay(Math.max(0, viewDayIndex), state.listOffsets),
-    [viewDayIndex, state.listOffsets]
+  // Today's readings are based on current listOffsets (position-based, not day-based).
+  // Completed readings have already advanced the offset, so we need to show
+  // the chapter BEFORE the offset for completed items, and AT the offset for incomplete.
+  const todayReadings = useMemo(
+    () => getReadingsForDay(0, state.listOffsets),
+    [state.listOffsets]
   );
 
+  // Full Plan projects forward from current positions
   const fullPlan = useMemo(
     () =>
       generatePlan(
-        new Date(state.startDate + 'T00:00:00'),
+        new Date(new Date().toISOString().split('T')[0] + 'T00:00:00'),
         state.daysToGenerate,
         state.listOffsets
       ),
-    [state.startDate, state.daysToGenerate, state.listOffsets]
+    [state.daysToGenerate, state.listOffsets]
   );
 
-  function handleDayChange(delta: number) {
-    setViewDayOffset((prev) => {
-      const next = prev + delta;
-      if (state.currentDayIndex + next < 0) return prev;
-      return next;
-    });
-    setActiveReading(null);
+  function handleToggleComplete(listIndex: number) {
+    // If this reading is currently active in the reader, clear it
+    // (the offset is about to change so the reading object will be stale)
+    if (activeReading && activeReading.listId === todayReadings[listIndex].listId) {
+      setActiveReading(null);
+    }
+    state.toggleReading(listIndex);
   }
 
   const showReader = activeTab === 'Today';
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      {/* Fixed top section */}
       <Header
         activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab);
-          if (tab === 'Today') setViewDayOffset(0);
-        }}
+        onTabChange={setActiveTab}
         translation={state.translation}
         onTranslationChange={state.setTranslation}
       />
@@ -61,14 +58,13 @@ function App() {
           <div className="shrink-0 bg-gray-50 border-b border-gray-200 px-4 py-3">
             <div className="max-w-[1600px] mx-auto">
               <DailyView
-                readings={dailyReadings}
-                dayIndex={viewDayIndex}
+                readings={todayReadings}
                 startDate={state.startDate}
                 currentDayIndex={state.currentDayIndex}
                 activeReading={activeReading}
+                completedToday={state.completedToday}
                 onSelectReading={setActiveReading}
-                onDayChange={handleDayChange}
-                onGoToToday={() => setViewDayOffset(0)}
+                onToggleComplete={handleToggleComplete}
               />
             </div>
           </div>
@@ -82,7 +78,6 @@ function App() {
           </div>
         </>
       ) : (
-        /* Scrollable content for Full Plan and Settings */
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {activeTab === 'Full Plan' && (
