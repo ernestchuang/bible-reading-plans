@@ -1,5 +1,4 @@
-import type { Reading, Translation } from '../types';
-import { getBibleReadingUrl } from '../utils/bibleLinks';
+import type { Reading } from '../types';
 
 const colorMap: Record<string, string> = {
   'bg-red-500': '#ef4444',
@@ -16,33 +15,33 @@ const colorMap: Record<string, string> = {
 
 interface ReadingCardProps {
   reading: Reading;
-  translation: Translation;
+  isActive: boolean;
+  onClick: () => void;
 }
 
-export function ReadingCard({ reading, translation }: ReadingCardProps) {
-  const url = getBibleReadingUrl(reading.book, reading.chapter, translation);
+export function ReadingCard({ reading, isActive, onClick }: ReadingCardProps) {
   const accentColor = colorMap[reading.listColor] ?? '#6b7280';
 
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block rounded-lg shadow-md bg-white p-4 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer"
+    <button
+      type="button"
+      onClick={onClick}
+      className={`block w-full text-left rounded-lg shadow-md p-3 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer ${
+        isActive
+          ? 'ring-2 ring-indigo-500 bg-indigo-50'
+          : 'bg-white'
+      }`}
     >
       <div
-        className="h-1.5 rounded-full -mt-1 mb-3"
+        className="h-1 rounded-full -mt-0.5 mb-2"
         style={{ backgroundColor: accentColor }}
       />
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
         {reading.listName}
       </p>
-      <p className="text-lg font-bold text-gray-900">
+      <p className="text-sm font-bold text-gray-900">
         {reading.book} {reading.chapter}
       </p>
-      <p className="text-xs text-gray-400 mt-2">
-        Click to read &rarr;
-      </p>
-    </a>
+    </button>
   );
 }

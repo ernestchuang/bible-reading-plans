@@ -1,22 +1,24 @@
-import type { Reading, Translation } from '../types';
+import type { Reading } from '../types';
 import { ReadingCard } from './ReadingCard';
 
 interface DailyViewProps {
   readings: Reading[];
-  translation: Translation;
   dayIndex: number;
   startDate: string;
   currentDayIndex: number;
+  activeReading: Reading | null;
+  onSelectReading: (reading: Reading) => void;
   onDayChange: (delta: number) => void;
   onGoToToday: () => void;
 }
 
 export function DailyView({
   readings,
-  translation,
   dayIndex,
   startDate,
   currentDayIndex,
+  activeReading,
+  onSelectReading,
   onDayChange,
   onGoToToday,
 }: DailyViewProps) {
@@ -25,54 +27,57 @@ export function DailyView({
   currentDate.setDate(currentDate.getDate() + dayIndex);
 
   const formattedDate = currentDate.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
+    weekday: 'short',
+    month: 'short',
     day: 'numeric',
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header with date and day number */}
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">Day {dayIndex + 1}</h2>
-        <p className="text-gray-600 mt-1">{formattedDate}</p>
-      </div>
-
-      {/* Navigation buttons */}
-      <div className="flex items-center justify-center gap-3">
-        <button
-          type="button"
-          onClick={() => onDayChange(-1)}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-        >
-          &larr; Prev
-        </button>
-        {!isToday && (
+    <div className="space-y-3">
+      {/* Compact header row: nav + date */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={onGoToToday}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
+            onClick={() => onDayChange(-1)}
+            className="px-2 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
           >
-            Today
+            &larr;
           </button>
-        )}
-        <button
-          type="button"
-          onClick={() => onDayChange(1)}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-        >
-          Next &rarr;
-        </button>
+          {!isToday && (
+            <button
+              type="button"
+              onClick={onGoToToday}
+              className="px-2 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 transition-colors"
+            >
+              Today
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onDayChange(1)}
+            className="px-2 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+          >
+            &rarr;
+          </button>
+        </div>
+        <div className="text-right">
+          <span className="text-sm font-bold text-gray-900">Day {dayIndex + 1}</span>
+          <span className="text-sm text-gray-500 ml-2">{formattedDate}</span>
+        </div>
       </div>
 
-      {/* Reading cards grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      {/* Reading cards - compact horizontal row */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2">
         {readings.map((reading) => (
           <ReadingCard
             key={reading.listId}
             reading={reading}
-            translation={translation}
+            isActive={
+              activeReading !== null &&
+              activeReading.listId === reading.listId
+            }
+            onClick={() => onSelectReading(reading)}
           />
         ))}
       </div>
