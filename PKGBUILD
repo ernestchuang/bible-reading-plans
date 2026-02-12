@@ -1,5 +1,5 @@
 pkgname=bible-reading-plan
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc="Daily Bible reading app using Dr. Grant Horner's system"
 arch=('x86_64')

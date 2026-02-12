@@ -52,7 +52,19 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Bible Reading Plan ${{ github.ref_name }}'
-          releaseBody: 'Download the app for your platform below.'
+          releaseBody: |
+            Download the app for your platform below.
+
+            ### macOS
+            - **Apple Silicon** (M1/M2/M3/M4): `Bible.Reading.Plan_*_aarch64.dmg`
+            - **Intel**: `Bible.Reading.Plan_*_x64.dmg`
+            - After installing, run `xattr -cr /Applications/Bible\ Reading\ Plan.app` in Terminal to bypass Gatekeeper
+
+            ### Linux
+            - **Ubuntu/Debian**: `.deb`
+            - **Fedora/RHEL**: `.rpm`
+            - **Any distro**: `.AppImage` (no install needed, just `chmod +x` and run)
+            - **Arch Linux**: Clone the repo and run `makepkg -si`
           releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.target }}

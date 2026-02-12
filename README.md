@@ -39,7 +39,7 @@ Download the latest release for your platform from the [Releases page](https://g
 1. Download `Bible.Reading.Plan_x.x.x_amd64.deb`
 2. Install with:
    ```bash
-   sudo dpkg -i Bible\ Reading\ Plan_x.x.x_amd64.deb
+   sudo dpkg -i "Bible Reading Plan_x.x.x_amd64.deb"
    ```
 3. Launch **Bible Reading Plan** from your application menu
 
@@ -48,18 +48,32 @@ Download the latest release for your platform from the [Releases page](https://g
 1. Download `Bible.Reading.Plan-x.x.x-1.x86_64.rpm`
 2. Install with:
    ```bash
-   sudo rpm -i Bible\ Reading\ Plan-x.x.x-1.x86_64.rpm
+   sudo rpm -i "Bible Reading Plan-x.x.x-1.x86_64.rpm"
    ```
 3. Launch **Bible Reading Plan** from your application menu
 
-### Linux (AppImage)
+### Linux (AppImage — any distro)
 
 1. Download `Bible.Reading.Plan_x.x.x_amd64.AppImage`
 2. Make it executable and run:
    ```bash
-   chmod +x Bible\ Reading\ Plan_x.x.x_amd64.AppImage
-   ./Bible\ Reading\ Plan_x.x.x_amd64.AppImage
+   chmod +x "Bible Reading Plan_x.x.x_amd64.AppImage"
+   ./"Bible Reading Plan_x.x.x_amd64.AppImage"
    ```
+
+### Arch Linux
+
+Clone the repo and build with `makepkg`:
+
+```bash
+git clone https://github.com/ernestchuang/bible-reading-plans.git
+cd bible-reading-plans
+makepkg -si
+```
+
+This installs the binary, a `.desktop` entry, and an app icon. Launch from your application menu or run `bible-reading-plan` from the terminal.
+
+**Dependencies:** `webkit2gtk-4.1`, `gtk3` (installed automatically by `makepkg -si`)
 
 ## Development
 
@@ -79,6 +93,17 @@ npm run build
 # Build native desktop app
 npm run tauri:build
 ```
+
+## Releasing a New Version
+
+1. Update the version in `package.json` and `src-tauri/tauri.conf.json`
+2. Commit and push
+3. Tag and push:
+   ```bash
+   git tag v0.2.0
+   git push origin v0.2.0
+   ```
+4. GitHub Actions automatically builds macOS and Linux binaries and creates a release
 
 ## How the Horner System Works
 
