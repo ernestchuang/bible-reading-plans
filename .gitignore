@@ -1,5 +1,28 @@
 node_modules
 dist
 *.local
-.DS_Store
 src-tauri/target
+src-tauri/gen/
+tsconfig.tsbuildinfo
+
+# Build artifacts
+*.pkg.tar.zst
+*.tar.gz
+pkg/
+src/bible-reading-plans-*/
+
+# Tauri installer artifacts
+*.deb
+*.msi
+*.AppImage
+*.dmg
+*.exe
+*.bundle
+
+# Apple
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
