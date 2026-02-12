@@ -20,6 +20,8 @@ jobs:
             target: aarch64-apple-darwin
           - platform: macos-latest
             target: x86_64-apple-darwin
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
 
     runs-on: ${{ matrix.platform }}
 
@@ -54,6 +56,10 @@ jobs:
           releaseName: 'Bible Reading Plan ${{ github.ref_name }}'
           releaseBody: |
             Download the app for your platform below.
+
+            ### Windows
+            - **Installer**: `.msi` (recommended)
+            - **Portable**: `.exe` (NSIS installer)
 
             ### macOS
             - **Apple Silicon** (M1/M2/M3/M4): `Bible.Reading.Plan_*_aarch64.dmg`
