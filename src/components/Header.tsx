@@ -1,8 +1,8 @@
+import { NavLink } from 'react-router-dom';
 import type { Translation, Theme } from '../types';
 import { PLANS } from '../data/plans';
 
 const TRANSLATIONS: Translation[] = ['NASB95', 'LSB', 'ESV', 'KJV'];
-const TABS = ['Today', 'Full Plan', 'Settings'] as const;
 const THEME_CYCLE: Theme[] = ['light', 'paper', 'dark', 'warm-dark', 'system'];
 
 const THEME_LABELS: Record<Theme, string> = {
@@ -19,8 +19,6 @@ function getNextTheme(current: Theme): Theme {
 }
 
 interface HeaderProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
   translation: Translation;
   onTranslationChange: (t: Translation) => void;
   activePlanId: string;
@@ -30,8 +28,6 @@ interface HeaderProps {
 }
 
 export function Header({
-  activeTab,
-  onTabChange,
   translation,
   onTranslationChange,
   activePlanId,
@@ -135,23 +131,26 @@ export function Header({
 
         {/* Tab navigation */}
         <nav className="-mb-px flex gap-6" aria-label="Tabs">
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab;
-            return (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => onTabChange(tab)}
-                className={`whitespace-nowrap border-b-2 pb-3 pt-1 text-sm font-medium transition-colors ${
+          {([
+            { to: '/read', label: 'Read' },
+            { to: '/plans', label: 'Today' },
+            { to: '/plan', label: 'Full Plan' },
+            { to: '/settings', label: 'Settings' },
+          ] as const).map(({ to, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `whitespace-nowrap border-b-2 pb-3 pt-1 text-sm font-medium transition-colors ${
                   isActive
                     ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300'
-                }`}
-              >
-                {tab}
-              </button>
-            );
-          })}
+                }`
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
         </nav>
       </div>
     </header>
