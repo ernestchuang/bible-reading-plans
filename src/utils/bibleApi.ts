@@ -102,6 +102,14 @@ export async function fetchChapter(
   }
 
   const data: Verse[] = await res.json();
+
+  if (translation === 'KJV') {
+    // Strip Strong's concordance tags (e.g. <S>7225</S>) and footnotes from KJV text
+    for (const verse of data) {
+      verse.text = verse.text.replace(/<S>\d+<\/S>/g, '');
+    }
+  }
+
   return data;
 }
 

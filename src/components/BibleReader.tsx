@@ -28,7 +28,7 @@ const DISPLAY_MODES: { value: DisplayMode; label: string; title: string }[] = [
 
 function DisplayModeToggle({ mode, onChange }: { mode: DisplayMode; onChange: (m: DisplayMode) => void }) {
   return (
-    <div className="flex rounded-md border border-gray-300 overflow-hidden" role="radiogroup" aria-label="Display mode">
+    <div className="flex rounded-md border border-gray-300 dark:border-gray-600 overflow-hidden" role="radiogroup" aria-label="Display mode">
       {DISPLAY_MODES.map(({ value, label, title }, i) => (
         <button
           key={value}
@@ -39,9 +39,9 @@ function DisplayModeToggle({ mode, onChange }: { mode: DisplayMode; onChange: (m
           onClick={() => onChange(value)}
           className={`px-2 py-1 text-xs font-medium transition-colors ${
             mode === value
-              ? 'bg-indigo-100 text-indigo-700'
-              : 'bg-white text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-          } ${i > 0 ? 'border-l border-gray-300' : ''}`}
+              ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300'
+              : 'bg-white text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700'
+          } ${i > 0 ? 'border-l border-gray-300 dark:border-gray-600' : ''}`}
         >
           {label}
         </button>
@@ -52,16 +52,16 @@ function DisplayModeToggle({ mode, onChange }: { mode: DisplayMode; onChange: (m
 
 function VerseByVerseView({ verses }: { verses: Verse[] }) {
   return (
-    <div className="text-base leading-7 text-gray-800 space-y-1">
+    <div className="text-base leading-7 text-gray-800 dark:text-gray-200 space-y-1">
       {verses.map((v) => {
         const { heading, body } = parseVerseText(v.text);
         return (
           <div key={v.pk}>
             {heading && (
-              <h3 className="text-lg font-bold text-gray-900 mt-6 mb-2">{heading}</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mt-6 mb-2">{heading}</h3>
             )}
             <p>
-              <sup className="text-xs font-semibold text-gray-400 mr-1 select-none">
+              <sup className="text-xs font-semibold text-gray-400 dark:text-gray-500 mr-1 select-none">
                 {v.verse}
               </sup>
               <span dangerouslySetInnerHTML={{ __html: body }} />
@@ -75,15 +75,15 @@ function VerseByVerseView({ verses }: { verses: Verse[] }) {
 
 function ParagraphView({ verses }: { verses: Verse[] }) {
   return (
-    <div className="text-base leading-7 text-gray-800">
+    <div className="text-base leading-7 text-gray-800 dark:text-gray-200">
       {verses.map((v) => {
         const { heading, body } = parseVerseText(v.text);
         return (
           <span key={v.pk}>
             {heading && (
-              <span className="block text-lg font-bold text-gray-900 mt-6 mb-2">{heading}</span>
+              <span className="block text-lg font-bold text-gray-900 dark:text-gray-100 mt-6 mb-2">{heading}</span>
             )}
-            <sup className="text-xs font-semibold text-gray-400 mr-0.5 select-none">
+            <sup className="text-xs font-semibold text-gray-400 dark:text-gray-500 mr-0.5 select-none">
               {v.verse}
             </sup>
             <span dangerouslySetInnerHTML={{ __html: body }} />
@@ -97,7 +97,7 @@ function ParagraphView({ verses }: { verses: Verse[] }) {
 
 function ReaderView({ verses }: { verses: Verse[] }) {
   return (
-    <div className="text-base leading-8 text-gray-800">
+    <div className="text-base leading-8 text-gray-800 dark:text-gray-200">
       {verses.map((v) => {
         const { body } = parseVerseText(v.text);
         const cleanBody = body.replace(/<\/?b>/g, '');
@@ -148,7 +148,7 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
 
   if (!reading) {
     return (
-      <div className="flex items-center justify-center h-full bg-gray-100 text-gray-400">
+      <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-900 text-gray-400 dark:text-gray-500">
         <p className="text-lg">Select a reading above to begin</p>
       </div>
     );
@@ -157,17 +157,17 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
   return (
     <div className="h-full flex flex-col">
       {/* Reader toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
-        <span className="text-sm font-medium text-gray-700">
+      <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {reading.book} {reading.chapter}
-          <span className="text-gray-400 ml-2">({translation})</span>
+          <span className="text-gray-400 dark:text-gray-500 ml-2">({translation})</span>
         </span>
         <div className="flex items-center gap-2">
           <DisplayModeToggle mode={displayMode} onChange={onDisplayModeChange} />
-          <span className="h-4 w-px bg-gray-300" />
+          <span className="h-4 w-px bg-gray-300 dark:bg-gray-600" />
           <button
             onClick={onToggleJournal}
-            className="text-xs text-indigo-600 hover:text-indigo-800 transition-colors"
+            className="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
           >
             {journalOpen ? 'Close Journal' : 'Journal'}
           </button>
@@ -175,19 +175,19 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
       </div>
 
       {/* Chapter content */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-white">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
         {loading && (
           <div className="flex items-center justify-center h-full">
-            <div className="text-gray-400 text-sm">Loading...</div>
+            <div className="text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
           </div>
         )}
 
         {error && (
           <div className="flex flex-col items-center justify-center h-full gap-3">
-            <p className="text-red-500 text-sm">{error}</p>
+            <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
             <button
               onClick={() => loadChapter(reading.book, reading.chapter, translation)}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
             >
               Retry
             </button>
@@ -196,7 +196,7 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
 
         {!loading && !error && verses.length > 0 && (
           <div className="max-w-3xl mx-auto px-6 py-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
               {reading.book} {reading.chapter}
             </h2>
             {displayMode === 'verse' && <VerseByVerseView verses={verses} />}

@@ -43,9 +43,9 @@ function bookChapterToOffset(list: ReadingList, bookIndex: number, chapter: numb
 const TRANSLATIONS: Translation[] = ['NASB95', 'LSB', 'ESV', 'KJV'];
 
 const inputClasses =
-  'block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500';
+  'block w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 dark:bg-gray-800 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500';
 
-const labelClasses = 'block text-sm font-medium text-gray-700 mb-1';
+const labelClasses = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
 
 export function SettingsPanel({
   lists,
@@ -80,7 +80,7 @@ export function SettingsPanel({
 
   return (
     <div className="space-y-8">
-      <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Settings</h2>
 
       {/* General settings */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -136,10 +136,10 @@ export function SettingsPanel({
 
       {/* List position adjustments */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
           List Starting Positions
         </h3>
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
           Adjust where each list begins reading. Useful if you want to pick up
           where you left off.
         </p>
@@ -152,10 +152,10 @@ export function SettingsPanel({
             return (
               <div
                 key={list.id}
-                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 bg-gray-50 rounded-lg"
+                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
               >
                 {/* List name */}
-                <span className="text-sm font-medium text-gray-700 w-28 shrink-0">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-28 shrink-0">
                   {list.name}
                 </span>
 
@@ -179,7 +179,7 @@ export function SettingsPanel({
                 <div className="flex items-center gap-2">
                   <label
                     htmlFor={`chapter-${list.id}`}
-                    className="text-sm text-gray-500"
+                    className="text-sm text-gray-500 dark:text-gray-400"
                   >
                     Ch.
                   </label>
@@ -198,7 +198,7 @@ export function SettingsPanel({
                     }
                     className={`${inputClasses} w-20`}
                   />
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
                     / {currentBook.chapters}
                   </span>
                 </div>
@@ -209,11 +209,11 @@ export function SettingsPanel({
       </div>
 
       {/* Reset button */}
-      <div className="pt-4 border-t border-gray-200">
+      <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           type="button"
           onClick={resetAll}
-          className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+          className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-700 rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
         >
           Reset All to Defaults
         </button>

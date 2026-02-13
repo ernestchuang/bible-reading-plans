@@ -7,6 +7,8 @@ A daily Bible reading app supporting multiple reading plans — including **Dr. 
 - **Multiple reading plans** — switch between Horner's (10 lists) and M'Cheyne's (4 lists) via a header dropdown
 - **Color-coded reading lists** with check-off tracking
 - **Native Bible reader** — click a chapter to read it inline with verse numbers, powered by the Bolls Life API (NASB95, LSB, ESV, KJV)
+- **Display modes** — verse-by-verse, paragraph, and reader's layout (LSB includes poetry formatting)
+- **Dark mode** — three-way toggle (Light / Dark / System) that follows your OS preference
 - **Carry-over system** — unchecked readings stay for the next day
 - **Progress tracking** — completion state resets daily, list positions persist
 - **Markdown export** and print-friendly layout

@@ -46,11 +46,11 @@ export function DailyView({
       {/* Header row: date + progress */}
       <div className="flex items-center justify-between">
         <div className="text-sm">
-          <span className="font-bold text-gray-900">Day {currentDayIndex + 1}</span>
-          <span className="text-gray-500 ml-2">{formattedDate}</span>
+          <span className="font-bold text-gray-900 dark:text-gray-100">Day {currentDayIndex + 1}</span>
+          <span className="text-gray-500 dark:text-gray-400 ml-2">{formattedDate}</span>
         </div>
-        <div className="text-sm text-gray-500">
-          <span className={completedCount === total ? 'text-green-600 font-semibold' : ''}>
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          <span className={completedCount === total ? 'text-green-600 dark:text-green-400 font-semibold' : ''}>
             {completedCount}/{total} complete
           </span>
         </div>

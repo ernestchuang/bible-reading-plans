@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import type { Translation, ReadingPlan, DisplayMode } from '../types';
+import type { Translation, ReadingPlan, DisplayMode, Theme } from '../types';
 import { PLANS, DEFAULT_PLAN_ID, getPlanById } from '../data/plans';
 
 const STORAGE_KEY = 'bible-reading-plan-v2';
@@ -19,6 +19,7 @@ interface StoredState {
   plans: Record<string, PerPlanState>;
   translation: Translation;
   displayMode: DisplayMode;
+  theme: Theme;
   daysToGenerate: number;
 }
 
@@ -35,6 +36,8 @@ export interface ReadingPlanState {
   setTranslation: (t: Translation) => void;
   displayMode: DisplayMode;
   setDisplayMode: (mode: DisplayMode) => void;
+  theme: Theme;
+  setTheme: (t: Theme) => void;
   daysToGenerate: number;
   setDaysToGenerate: (n: number) => void;
   currentDayIndex: number;
@@ -68,6 +71,7 @@ function getDefaults(): StoredState {
     plans,
     translation: 'NASB95',
     displayMode: 'verse' as DisplayMode,
+    theme: 'system' as Theme,
     daysToGenerate: 30,
   };
 }
@@ -107,6 +111,7 @@ function migrateLegacy(): StoredState | null {
       },
       translation: legacy.translation ?? defaults.translation,
       displayMode: defaults.displayMode,
+      theme: defaults.theme,
       daysToGenerate: legacy.daysToGenerate ?? defaults.daysToGenerate,
     };
 
@@ -155,6 +160,7 @@ function loadFromStorage(): StoredState {
         plans,
         translation: parsed.translation ?? defaults.translation,
         displayMode: parsed.displayMode ?? defaults.displayMode,
+        theme: parsed.theme ?? defaults.theme,
         daysToGenerate: parsed.daysToGenerate ?? defaults.daysToGenerate,
       };
     }
@@ -260,6 +266,10 @@ export function useReadingPlan(): ReadingPlanState {
     setStored((prev) => ({ ...prev, displayMode: mode }));
   }
 
+  function setTheme(t: Theme) {
+    setStored((prev) => ({ ...prev, theme: t }));
+  }
+
   function setDaysToGenerate(n: number) {
     setStored((prev) => ({ ...prev, daysToGenerate: n }));
   }
@@ -310,6 +320,7 @@ export function useReadingPlan(): ReadingPlanState {
       },
       translation: defaults.translation,
       displayMode: defaults.displayMode,
+      theme: defaults.theme,
       daysToGenerate: defaults.daysToGenerate,
     }));
   }
@@ -327,6 +338,8 @@ export function useReadingPlan(): ReadingPlanState {
     setTranslation,
     displayMode: stored.displayMode,
     setDisplayMode,
+    theme: stored.theme,
+    setTheme,
     daysToGenerate: stored.daysToGenerate,
     setDaysToGenerate,
     currentDayIndex,

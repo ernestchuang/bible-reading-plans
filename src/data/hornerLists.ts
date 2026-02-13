@@ -12,7 +12,7 @@ function makeList(
 
 export const HORNER_LISTS: ReadingList[] = [
   // List 1: Gospels
-  makeList(1, 'Gospels', 'bg-red-500', [
+  makeList(1, 'Gospels', 'bg-red-600', [
     { name: 'Matthew', chapters: 28 },
     { name: 'Mark', chapters: 16 },
     { name: 'Luke', chapters: 24 },
@@ -20,7 +20,7 @@ export const HORNER_LISTS: ReadingList[] = [
   ]),
 
   // List 2: Pentateuch
-  makeList(2, 'Pentateuch', 'bg-amber-600', [
+  makeList(2, 'Pentateuch', 'bg-blue-600', [
     { name: 'Genesis', chapters: 50 },
     { name: 'Exodus', chapters: 40 },
     { name: 'Leviticus', chapters: 27 },
@@ -29,7 +29,7 @@ export const HORNER_LISTS: ReadingList[] = [
   ]),
 
   // List 3: Epistles I
-  makeList(3, 'Epistles I', 'bg-emerald-500', [
+  makeList(3, 'Epistles I', 'bg-emerald-600', [
     { name: 'Romans', chapters: 16 },
     { name: '1 Corinthians', chapters: 16 },
     { name: '2 Corinthians', chapters: 13 },
@@ -41,7 +41,7 @@ export const HORNER_LISTS: ReadingList[] = [
   ]),
 
   // List 4: Epistles II
-  makeList(4, 'Epistles II', 'bg-purple-500', [
+  makeList(4, 'Epistles II', 'bg-purple-600', [
     { name: '1 Thessalonians', chapters: 5 },
     { name: '2 Thessalonians', chapters: 3 },
     { name: '1 Timothy', chapters: 6 },
@@ -59,7 +59,7 @@ export const HORNER_LISTS: ReadingList[] = [
   ]),
 
   // List 5: Wisdom
-  makeList(5, 'Wisdom', 'bg-yellow-500', [
+  makeList(5, 'Wisdom', 'bg-amber-600', [
     { name: 'Job', chapters: 42 },
     { name: 'Ecclesiastes', chapters: 12 },
     { name: 'Song of Solomon', chapters: 8 },
@@ -71,12 +71,12 @@ export const HORNER_LISTS: ReadingList[] = [
   ]),
 
   // List 7: Proverbs
-  makeList(7, 'Proverbs', 'bg-rose-500', [
+  makeList(7, 'Proverbs', 'bg-yellow-500', [
     { name: 'Proverbs', chapters: 31 },
   ]),
 
   // List 8: History
-  makeList(8, 'History', 'bg-teal-500', [
+  makeList(8, 'History', 'bg-teal-600', [
     { name: 'Joshua', chapters: 24 },
     { name: 'Judges', chapters: 21 },
     { name: 'Ruth', chapters: 4 },
@@ -92,7 +92,7 @@ export const HORNER_LISTS: ReadingList[] = [
   ]),
 
   // List 9: Prophets
-  makeList(9, 'Prophets', 'bg-indigo-500', [
+  makeList(9, 'Prophets', 'bg-indigo-600', [
     { name: 'Isaiah', chapters: 66 },
     { name: 'Jeremiah', chapters: 52 },
     { name: 'Lamentations', chapters: 5 },

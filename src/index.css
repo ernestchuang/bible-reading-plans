@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+html.dark {
+  background-color: #111827; /* gray-900 */
+  color-scheme: dark;
+}
+
+/* Milkdown Crepe dark mode overrides */
+.dark .milkdown {
+  --crepe-color-background: #1B1C1D;
+  --crepe-color-on-background: #F8F9FF;
+  --crepe-color-surface: #111418;
+  --crepe-color-surface-low: #191C20;
+}
+
 @media print {
   /* Hide header, navigation, and buttons when printing */
   header,

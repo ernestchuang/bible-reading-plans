@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-02-13
+
+### Added
+
+- Dark mode with three-way toggle (Light / Dark / System) — cycling icon button in the header
+- Bible text display modes: verse-by-verse, paragraph, and reader's layout with toolbar toggle
+- Flash-of-wrong-theme prevention on page load
+
+### Fixed
+
+- Strip Strong's concordance numbers from KJV translation (scoped to KJV only)
+- Regenerated macOS app icon — `.icns` was a 16×16 PNG, now a proper multi-resolution icon container
+
+### Changed
+
+- Theme and display mode preferences persist in localStorage
+- System theme mode follows OS `prefers-color-scheme` and responds to live changes
+- Milkdown editor styled for dark mode via CSS variable overrides
+
 ## [0.5.0] - 2026-02-12
 
 ### Changed
@@ -85,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tauri desktop app for macOS and Linux
 - GitHub Actions release workflow
 
+[0.6.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.3.0...v0.3.1

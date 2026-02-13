@@ -28,7 +28,7 @@ function formatMonthHeader(key: string): string {
 export function JournalDateView({ entries, isLoading, onReply }: JournalDateViewProps) {
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8 text-gray-400">
+      <div className="flex items-center justify-center py-8 text-gray-400 dark:text-gray-500">
         Loading entries...
       </div>
     );
@@ -36,7 +36,7 @@ export function JournalDateView({ entries, isLoading, onReply }: JournalDateView
 
   if (entries.length === 0) {
     return (
-      <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
+      <div className="flex items-center justify-center py-8 text-gray-400 dark:text-gray-500 text-sm">
         No journal entries yet.
       </div>
     );
@@ -48,13 +48,13 @@ export function JournalDateView({ entries, isLoading, onReply }: JournalDateView
     <div className="space-y-4">
       {Array.from(grouped.entries()).map(([monthKey, monthEntries]) => (
         <div key={monthKey}>
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-2">
+          <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-1 mb-2">
             {formatMonthHeader(monthKey)}
           </h3>
           <div className="space-y-2">
             {monthEntries.map((entry) => (
               <div key={entry.filename}>
-                <div className="text-xs text-gray-400 px-1 mb-1">
+                <div className="text-xs text-gray-400 dark:text-gray-500 px-1 mb-1">
                   {entry.meta.book} {entry.meta.chapter}
                 </div>
                 <JournalEntryCard

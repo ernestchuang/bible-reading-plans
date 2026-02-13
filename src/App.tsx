@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useReadingPlan } from './hooks/useReadingPlan';
 import { getReadingsForDay, generatePlan } from './utils/planGenerator';
-import type { Reading } from './types';
+import type { Reading, Theme } from './types';
 import { Header } from './components/Header';
 import { DailyView } from './components/DailyView';
 import { BibleReader } from './components/BibleReader';
@@ -14,6 +14,30 @@ function App() {
   const [activeTab, setActiveTab] = useState('Today');
   const [activeReading, setActiveReading] = useState<Reading | null>(null);
   const [journalOpen, setJournalOpen] = useState(false);
+
+  // Sync dark class on <html> with theme state
+  useEffect(() => {
+    const root = document.documentElement;
+
+    function applyTheme(theme: Theme, prefersDark: boolean) {
+      if (theme === 'dark' || (theme === 'system' && prefersDark)) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    }
+
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    applyTheme(state.theme, mql.matches);
+
+    function handleChange(e: MediaQueryListEvent) {
+      if (state.theme === 'system') {
+        applyTheme('system', e.matches);
+      }
+    }
+    mql.addEventListener('change', handleChange);
+    return () => mql.removeEventListener('change', handleChange);
+  }, [state.theme]);
 
   const lists = state.activePlan.lists;
 
@@ -55,7 +79,7 @@ function App() {
   const showReader = activeTab === 'Today';
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden dark:bg-gray-900">
       <Header
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -63,12 +87,14 @@ function App() {
         onTranslationChange={state.setTranslation}
         activePlanId={state.activePlanId}
         onPlanChange={handlePlanChange}
+        theme={state.theme}
+        onThemeChange={state.setTheme}
       />
 
       {showReader ? (
         <>
           {/* Compact reading plan bar */}
-          <div className="shrink-0 bg-gray-50 border-b border-gray-200 px-4 py-3">
+          <div className="shrink-0 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
             <div className="max-w-[1600px] mx-auto">
               <DailyView
                 readings={todayReadings}
@@ -95,7 +121,7 @@ function App() {
               />
             </div>
             {journalOpen && (
-              <div className="w-1/2 min-w-0 h-full border-l border-gray-200">
+              <div className="w-1/2 min-w-0 h-full border-l border-gray-200 dark:border-gray-700">
                 <JournalPane reading={activeReading} />
               </div>
             )}

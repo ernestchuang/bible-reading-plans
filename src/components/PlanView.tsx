@@ -4,14 +4,20 @@ import { exportToMarkdown } from '../utils/planGenerator';
 
 const colorMap: Record<string, string> = {
   'bg-red-500': '#ef4444',
+  'bg-red-600': '#dc2626',
+  'bg-blue-600': '#2563eb',
   'bg-amber-600': '#d97706',
   'bg-emerald-500': '#10b981',
+  'bg-emerald-600': '#059669',
   'bg-purple-500': '#a855f7',
+  'bg-purple-600': '#9333ea',
   'bg-yellow-500': '#eab308',
   'bg-orange-500': '#f97316',
   'bg-rose-500': '#f43f5e',
   'bg-teal-500': '#14b8a6',
+  'bg-teal-600': '#0d9488',
   'bg-indigo-500': '#6366f1',
+  'bg-indigo-600': '#4f46e5',
   'bg-sky-500': '#0ea5e9',
 };
 
@@ -41,19 +47,19 @@ export function PlanView({ plan }: PlanViewProps) {
     <div className="space-y-6">
       {/* Action bar */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Full Reading Plan</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Full Reading Plan</h2>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={handleDownload}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             Download Markdown
           </button>
           <button
             type="button"
             onClick={handlePrint}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
           >
             Print
           </button>
@@ -73,13 +79,13 @@ export function PlanView({ plan }: PlanViewProps) {
           return (
             <div
               key={day.day}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
             >
               {/* Day header */}
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-900">
+              <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                   Day {day.day}{' '}
-                  <span className="font-normal text-gray-500">
+                  <span className="font-normal text-gray-500 dark:text-gray-400">
                     &mdash; {dateStr}
                   </span>
                 </h3>
@@ -94,7 +100,7 @@ export function PlanView({ plan }: PlanViewProps) {
                   return (
                     <span
                       key={reading.listId}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 bg-gray-100"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700"
                     >
                       <span
                         className="inline-block w-2 h-2 rounded-full shrink-0"
