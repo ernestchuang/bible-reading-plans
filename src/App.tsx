@@ -15,15 +15,18 @@ function App() {
   const [activeReading, setActiveReading] = useState<Reading | null>(null);
   const [journalOpen, setJournalOpen] = useState(false);
 
-  // Sync dark class on <html> with theme state
+  // Sync theme classes on <html>
   useEffect(() => {
     const root = document.documentElement;
 
     function applyTheme(theme: Theme, prefersDark: boolean) {
+      root.classList.remove('dark', 'paper', 'warm-dark');
       if (theme === 'dark' || (theme === 'system' && prefersDark)) {
         root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
+      } else if (theme === 'warm-dark') {
+        root.classList.add('dark', 'warm-dark');
+      } else if (theme === 'paper') {
+        root.classList.add('paper');
       }
     }
 
@@ -116,13 +119,20 @@ function App() {
                 translation={state.translation}
                 displayMode={state.displayMode}
                 onDisplayModeChange={state.setDisplayMode}
+                fontFamily={state.fontFamily}
+                fontSize={state.fontSize}
+                onFontSizeChange={state.setFontSize}
                 onToggleJournal={() => setJournalOpen((p) => !p)}
                 journalOpen={journalOpen}
               />
             </div>
             {journalOpen && (
               <div className="w-1/2 min-w-0 h-full border-l border-gray-200 dark:border-gray-700">
-                <JournalPane reading={activeReading} />
+                <JournalPane
+                  reading={activeReading}
+                  fontFamily={state.fontFamily}
+                  fontSize={state.fontSize}
+                />
               </div>
             )}
           </div>
@@ -144,6 +154,10 @@ function App() {
                 setTranslation={state.setTranslation}
                 daysToGenerate={state.daysToGenerate}
                 setDaysToGenerate={state.setDaysToGenerate}
+                fontFamily={state.fontFamily}
+                setFontFamily={state.setFontFamily}
+                fontSize={state.fontSize}
+                setFontSize={state.setFontSize}
                 resetAll={state.resetAll}
               />
             )}

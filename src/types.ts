@@ -42,4 +42,8 @@ export type Translation = 'NASB95' | 'LSB' | 'ESV' | 'KJV';
 
 export type DisplayMode = 'verse' | 'paragraph' | 'reader';
 
-export type Theme = 'light' | 'dark' | 'system';
+export type Theme = 'light' | 'paper' | 'dark' | 'warm-dark' | 'system';
+
+export type FontFamily = 'system' | 'inter' | 'lexend' | 'linguistics-pro' | 'literata' | 'eb-garamond';
+
+export type FontSize = 14 | 16 | 18 | 20 | 22;

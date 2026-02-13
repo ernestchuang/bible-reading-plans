@@ -1,10 +1,12 @@
 import type { JournalEntry } from '../../types/journal';
+import type { FontFamily } from '../../types';
 import { JournalEntryCard } from './JournalEntryCard';
 
 interface JournalDateViewProps {
   entries: JournalEntry[];
   isLoading: boolean;
   onReply: (filename: string, book: string, chapter: number) => void;
+  fontFamily: FontFamily;
 }
 
 function groupByMonth(entries: JournalEntry[]): Map<string, JournalEntry[]> {
@@ -25,7 +27,7 @@ function formatMonthHeader(key: string): string {
   return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
 }
 
-export function JournalDateView({ entries, isLoading, onReply }: JournalDateViewProps) {
+export function JournalDateView({ entries, isLoading, onReply, fontFamily }: JournalDateViewProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8 text-gray-400 dark:text-gray-500">
@@ -62,6 +64,7 @@ export function JournalDateView({ entries, isLoading, onReply }: JournalDateView
                   onReply={(filename) =>
                     onReply(filename, entry.meta.book, entry.meta.chapter)
                   }
+                  fontFamily={fontFamily}
                 />
               </div>
             ))}

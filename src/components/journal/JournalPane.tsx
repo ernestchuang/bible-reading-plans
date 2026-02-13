@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Reading } from '../../types';
+import type { Reading, FontFamily, FontSize } from '../../types';
 import type { JournalViewMode } from '../../types/journal';
 import { useJournal } from '../../hooks/useJournal';
 import { JournalEditor } from './JournalEditor';
@@ -8,9 +8,11 @@ import { JournalDateView } from './JournalDateView';
 
 interface JournalPaneProps {
   reading: Reading | null;
+  fontFamily: FontFamily;
+  fontSize: FontSize;
 }
 
-export function JournalPane({ reading }: JournalPaneProps) {
+export function JournalPane({ reading, fontFamily, fontSize }: JournalPaneProps) {
   const book = reading?.book ?? null;
   const chapter = reading?.chapter ?? null;
   const {
@@ -72,6 +74,8 @@ export function JournalPane({ reading }: JournalPaneProps) {
             onSave={handleSave}
             onCancel={handleCancel}
             linkedTo={linkedTo}
+            fontFamily={fontFamily}
+            fontSize={fontSize}
           />
         </div>
       </div>
@@ -108,6 +112,7 @@ export function JournalPane({ reading }: JournalPaneProps) {
                   key={entry.filename}
                   entry={entry}
                   onReply={handleReply}
+                  fontFamily={fontFamily}
                 />
               ))}
             </div>
@@ -117,6 +122,7 @@ export function JournalPane({ reading }: JournalPaneProps) {
             entries={allEntries}
             isLoading={isLoading}
             onReply={handleDateViewReply}
+            fontFamily={fontFamily}
           />
         )}
       </div>

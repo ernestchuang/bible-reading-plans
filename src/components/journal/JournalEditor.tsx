@@ -2,11 +2,15 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Crepe, CrepeFeature } from '@milkdown/crepe';
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
+import type { FontFamily, FontSize } from '../../types';
+import { getFontCss } from '../../data/fonts';
 
 interface JournalEditorProps {
   onSave: (markdown: string) => void;
   onCancel: () => void;
   linkedTo?: string;
+  fontFamily: FontFamily;
+  fontSize: FontSize;
 }
 
 const CHEAT_SHEET = [
@@ -24,10 +28,12 @@ const CHEAT_SHEET = [
   { syntax: '---', desc: 'Horizontal rule' },
 ];
 
-export function JournalEditor({ onSave, onCancel, linkedTo }: JournalEditorProps) {
+export function JournalEditor({ onSave, onCancel, linkedTo, fontFamily, fontSize }: JournalEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const crepeRef = useRef<Crepe | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+
+  const fontCss = getFontCss(fontFamily);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -76,7 +82,16 @@ export function JournalEditor({ onSave, onCancel, linkedTo }: JournalEditorProps
           </span>
         </div>
       )}
-      <div ref={containerRef} className="flex-1 min-h-0 overflow-y-auto" />
+      <div
+        ref={containerRef}
+        className="flex-1 min-h-0 overflow-y-auto"
+        style={{
+          '--crepe-font-default': fontCss,
+          '--crepe-font-title': fontCss,
+          fontSize: `${fontSize}px`,
+          lineHeight: `${fontSize + 8}px`,
+        } as React.CSSProperties}
+      />
 
       {showHelp && (
         <div className="absolute bottom-12 left-3 right-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 z-10">

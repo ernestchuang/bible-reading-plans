@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-02-13
+
+### Added
+
+- Customizable reading font: 6 options (System Sans, Inter, Lexend, Linguistics Pro, Literata, EB Garamond) applied to Bible text and journal
+- Adjustable font size (14–22px) with A-/A+ stepper in reader toolbar and dropdown in Settings
+- Paper theme: warm cream backgrounds for comfortable daytime reading
+- Warm Dark theme: warm brown-toned dark mode as an alternative to cool gray
+- Reading Appearance section in Settings with font selectors and live preview
+- Expandable journal entry cards: click to read full entry content inline
+
+### Changed
+
+- Theme cycle expanded to 5 modes: Light → Paper → Dark → Warm Dark → System
+- Bundled Linguistics Pro font (OFL-licensed) as woff2 since it's not on fontsource
+- Flash-of-wrong-theme prevention updated for Paper and Warm Dark themes
+
 ## [0.6.1] - 2026-02-13
 
 ### Changed
@@ -110,6 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tauri desktop app for macOS and Linux
 - GitHub Actions release workflow
 
+[0.7.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.4.0...v0.5.0

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import type { Translation, ReadingPlan, DisplayMode, Theme } from '../types';
+import type { Translation, ReadingPlan, DisplayMode, Theme, FontFamily, FontSize } from '../types';
 import { PLANS, DEFAULT_PLAN_ID, getPlanById } from '../data/plans';
 
 const STORAGE_KEY = 'bible-reading-plan-v2';
@@ -20,6 +20,8 @@ interface StoredState {
   translation: Translation;
   displayMode: DisplayMode;
   theme: Theme;
+  fontFamily: FontFamily;
+  fontSize: FontSize;
   daysToGenerate: number;
 }
 
@@ -38,6 +40,10 @@ export interface ReadingPlanState {
   setDisplayMode: (mode: DisplayMode) => void;
   theme: Theme;
   setTheme: (t: Theme) => void;
+  fontFamily: FontFamily;
+  setFontFamily: (f: FontFamily) => void;
+  fontSize: FontSize;
+  setFontSize: (s: FontSize) => void;
   daysToGenerate: number;
   setDaysToGenerate: (n: number) => void;
   currentDayIndex: number;
@@ -72,6 +78,8 @@ function getDefaults(): StoredState {
     translation: 'NASB95',
     displayMode: 'verse' as DisplayMode,
     theme: 'system' as Theme,
+    fontFamily: 'system' as FontFamily,
+    fontSize: 16 as FontSize,
     daysToGenerate: 30,
   };
 }
@@ -112,6 +120,8 @@ function migrateLegacy(): StoredState | null {
       translation: legacy.translation ?? defaults.translation,
       displayMode: defaults.displayMode,
       theme: defaults.theme,
+      fontFamily: defaults.fontFamily,
+      fontSize: defaults.fontSize,
       daysToGenerate: legacy.daysToGenerate ?? defaults.daysToGenerate,
     };
 
@@ -161,6 +171,8 @@ function loadFromStorage(): StoredState {
         translation: parsed.translation ?? defaults.translation,
         displayMode: parsed.displayMode ?? defaults.displayMode,
         theme: parsed.theme ?? defaults.theme,
+        fontFamily: (parsed as Record<string, unknown>).fontFamily as FontFamily ?? defaults.fontFamily,
+        fontSize: (parsed as Record<string, unknown>).fontSize as FontSize ?? defaults.fontSize,
         daysToGenerate: parsed.daysToGenerate ?? defaults.daysToGenerate,
       };
     }
@@ -270,6 +282,14 @@ export function useReadingPlan(): ReadingPlanState {
     setStored((prev) => ({ ...prev, theme: t }));
   }
 
+  function setFontFamily(f: FontFamily) {
+    setStored((prev) => ({ ...prev, fontFamily: f }));
+  }
+
+  function setFontSize(s: FontSize) {
+    setStored((prev) => ({ ...prev, fontSize: s }));
+  }
+
   function setDaysToGenerate(n: number) {
     setStored((prev) => ({ ...prev, daysToGenerate: n }));
   }
@@ -321,6 +341,8 @@ export function useReadingPlan(): ReadingPlanState {
       translation: defaults.translation,
       displayMode: defaults.displayMode,
       theme: defaults.theme,
+      fontFamily: defaults.fontFamily,
+      fontSize: defaults.fontSize,
       daysToGenerate: defaults.daysToGenerate,
     }));
   }
@@ -340,6 +362,10 @@ export function useReadingPlan(): ReadingPlanState {
     setDisplayMode,
     theme: stored.theme,
     setTheme,
+    fontFamily: stored.fontFamily,
+    setFontFamily,
+    fontSize: stored.fontSize,
+    setFontSize,
     daysToGenerate: stored.daysToGenerate,
     setDaysToGenerate,
     currentDayIndex,

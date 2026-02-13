@@ -7,12 +7,144 @@ html.dark {
   color-scheme: dark;
 }
 
+/* Paper theme — warm cream light mode */
+html.paper {
+  background-color: #F5F0E8;
+}
+
+.paper .bg-white {
+  background-color: #FAF7F2;
+}
+
+.paper .bg-gray-50 {
+  background-color: #EDE8DE;
+}
+
+.paper .bg-gray-100 {
+  background-color: #E8E2D8;
+}
+
+.paper .border-gray-200 {
+  border-color: #D8D0C4;
+}
+
+.paper .border-gray-300 {
+  border-color: #CFC6B8;
+}
+
+.paper .shadow {
+  box-shadow: 0 1px 3px rgba(120, 100, 70, 0.12), 0 1px 2px rgba(120, 100, 70, 0.08);
+}
+
+/* Warm Dark theme — warm brown-toned dark mode
+   Uses html.warm-dark for specificity (0,2,1) to beat
+   Tailwind's dark:* selectors which use :is(.dark *) at (0,2,0) */
+html.warm-dark {
+  background-color: #1A1410;
+  color-scheme: dark;
+}
+
+/* Backgrounds */
+html.warm-dark .dark\:bg-gray-900 {
+  background-color: #1A1410;
+}
+
+html.warm-dark .dark\:bg-gray-800 {
+  background-color: #2A2118;
+}
+
+html.warm-dark .dark\:bg-gray-800\/50 {
+  background-color: rgba(42, 33, 24, 0.5);
+}
+
+html.warm-dark .dark\:bg-gray-700 {
+  background-color: #3D3228;
+}
+
+html.warm-dark .dark\:bg-gray-600 {
+  background-color: #4D4035;
+}
+
+/* Borders */
+html.warm-dark .dark\:border-gray-700 {
+  border-color: #3D3228;
+}
+
+html.warm-dark .dark\:border-gray-600 {
+  border-color: #4D4035;
+}
+
+html.warm-dark .dark\:border-amber-800 {
+  border-color: #5C3A10;
+}
+
+/* Text */
+html.warm-dark .dark\:text-gray-100 {
+  color: #F5F0E8;
+}
+
+html.warm-dark .dark\:text-gray-200 {
+  color: #E8E0D4;
+}
+
+html.warm-dark .dark\:text-gray-300 {
+  color: #D4C8B8;
+}
+
+html.warm-dark .dark\:text-gray-400 {
+  color: #A89888;
+}
+
+html.warm-dark .dark\:text-gray-500 {
+  color: #8A7A68;
+}
+
+/* Shadows */
+html.warm-dark .dark\:shadow-gray-900\/50 {
+  --tw-shadow-color: rgba(26, 20, 16, 0.5);
+  --tw-shadow: var(--tw-shadow-colored);
+}
+
+/* Hover states */
+html.warm-dark .dark\:hover\:bg-gray-700:hover {
+  background-color: #3D3228;
+}
+
+html.warm-dark .dark\:hover\:text-gray-200:hover {
+  color: #E8E0D4;
+}
+
+html.warm-dark .dark\:hover\:text-gray-300:hover {
+  color: #D4C8B8;
+}
+
 /* Milkdown Crepe dark mode overrides */
 .dark .milkdown {
   --crepe-color-background: #1B1C1D;
   --crepe-color-on-background: #F8F9FF;
   --crepe-color-surface: #111418;
   --crepe-color-surface-low: #191C20;
+}
+
+/* Milkdown Paper theme overrides */
+.paper .milkdown {
+  --crepe-color-background: #FAF7F2;
+  --crepe-color-surface: #F5F0E8;
+  --crepe-color-surface-low: #EDE8DE;
+}
+
+/* Milkdown Warm Dark theme overrides */
+.warm-dark .milkdown {
+  --crepe-color-background: #1A1410;
+  --crepe-color-on-background: #F5F0E8;
+  --crepe-color-surface: #2A2118;
+  --crepe-color-surface-low: #1A1410;
+}
+
+/* Allow font size to be controlled by container */
+.milkdown .ProseMirror p {
+  font-size: inherit;
+  line-height: inherit;
 }
 
 @media print {

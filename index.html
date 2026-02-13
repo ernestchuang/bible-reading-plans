@@ -12,6 +12,10 @@
         var t = s.theme || 'system';
         if (t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme:dark)').matches))
           document.documentElement.classList.add('dark');
+        else if (t === 'warm-dark')
+          document.documentElement.classList.add('dark', 'warm-dark');
+        else if (t === 'paper')
+          document.documentElement.classList.add('paper');
       } catch (e) {}
     </script>
     <div id="root"></div>

@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { Reading, Translation, Verse, DisplayMode } from '../types';
+import type { Reading, Translation, Verse, DisplayMode, FontFamily, FontSize } from '../types';
 import { fetchChapter } from '../utils/bibleApi';
+import { getFontCss, FONT_SIZES } from '../data/fonts';
 
 interface BibleReaderProps {
   reading: Reading | null;
   translation: Translation;
   displayMode: DisplayMode;
   onDisplayModeChange: (mode: DisplayMode) => void;
+  fontFamily: FontFamily;
+  fontSize: FontSize;
+  onFontSizeChange: (size: FontSize) => void;
   onToggleJournal: () => void;
   journalOpen: boolean;
 }
@@ -50,15 +54,50 @@ function DisplayModeToggle({ mode, onChange }: { mode: DisplayMode; onChange: (m
   );
 }
 
-function VerseByVerseView({ verses }: { verses: Verse[] }) {
+function FontSizeStepper({ fontSize, onChange }: { fontSize: FontSize; onChange: (s: FontSize) => void }) {
+  const sizes = FONT_SIZES.map((f) => f.value);
+  const idx = sizes.indexOf(fontSize);
+
   return (
-    <div className="text-base leading-7 text-gray-800 dark:text-gray-200 space-y-1">
+    <div className="flex items-center gap-0.5">
+      <button
+        type="button"
+        disabled={idx <= 0}
+        onClick={() => onChange(sizes[idx - 1])}
+        className="px-1.5 py-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        title="Decrease font size"
+        aria-label="Decrease font size"
+      >
+        A-
+      </button>
+      <button
+        type="button"
+        disabled={idx >= sizes.length - 1}
+        onClick={() => onChange(sizes[idx + 1])}
+        className="px-1.5 py-1 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        title="Increase font size"
+        aria-label="Increase font size"
+      >
+        A+
+      </button>
+    </div>
+  );
+}
+
+function VerseByVerseView({ verses, fontSize }: { verses: Verse[]; fontSize: FontSize }) {
+  return (
+    <div className="text-gray-800 dark:text-gray-200 space-y-1">
       {verses.map((v) => {
         const { heading, body } = parseVerseText(v.text);
         return (
           <div key={v.pk}>
             {heading && (
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mt-6 mb-2">{heading}</h3>
+              <h3
+                className="font-bold text-gray-900 dark:text-gray-100 mt-6 mb-2"
+                style={{ fontSize: `${fontSize + 2}px` }}
+              >
+                {heading}
+              </h3>
             )}
             <p>
               <sup className="text-xs font-semibold text-gray-400 dark:text-gray-500 mr-1 select-none">
@@ -73,15 +112,20 @@ function VerseByVerseView({ verses }: { verses: Verse[] }) {
   );
 }
 
-function ParagraphView({ verses }: { verses: Verse[] }) {
+function ParagraphView({ verses, fontSize }: { verses: Verse[]; fontSize: FontSize }) {
   return (
-    <div className="text-base leading-7 text-gray-800 dark:text-gray-200">
+    <div className="text-gray-800 dark:text-gray-200">
       {verses.map((v) => {
         const { heading, body } = parseVerseText(v.text);
         return (
           <span key={v.pk}>
             {heading && (
-              <span className="block text-lg font-bold text-gray-900 dark:text-gray-100 mt-6 mb-2">{heading}</span>
+              <span
+                className="block font-bold text-gray-900 dark:text-gray-100 mt-6 mb-2"
+                style={{ fontSize: `${fontSize + 2}px` }}
+              >
+                {heading}
+              </span>
             )}
             <sup className="text-xs font-semibold text-gray-400 dark:text-gray-500 mr-0.5 select-none">
               {v.verse}
@@ -97,7 +141,7 @@ function ParagraphView({ verses }: { verses: Verse[] }) {
 
 function ReaderView({ verses }: { verses: Verse[] }) {
   return (
-    <div className="text-base leading-8 text-gray-800 dark:text-gray-200">
+    <div className="text-gray-800 dark:text-gray-200">
       {verses.map((v) => {
         const { body } = parseVerseText(v.text);
         const cleanBody = body.replace(/<\/?b>/g, '');
@@ -112,11 +156,18 @@ function ReaderView({ verses }: { verses: Verse[] }) {
   );
 }
 
-export function BibleReader({ reading, translation, displayMode, onDisplayModeChange, onToggleJournal, journalOpen }: BibleReaderProps) {
+export function BibleReader({ reading, translation, displayMode, onDisplayModeChange, fontFamily, fontSize, onFontSizeChange, onToggleJournal, journalOpen }: BibleReaderProps) {
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const fontCss = getFontCss(fontFamily);
+  const contentStyle: React.CSSProperties = {
+    fontFamily: fontCss,
+    fontSize: `${fontSize}px`,
+    lineHeight: `${fontSize + 8}px`,
+  };
 
   const loadChapter = useCallback(async (book: string, chapter: number, trans: Translation) => {
     setLoading(true);
@@ -165,6 +216,8 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
         <div className="flex items-center gap-2">
           <DisplayModeToggle mode={displayMode} onChange={onDisplayModeChange} />
           <span className="h-4 w-px bg-gray-300 dark:bg-gray-600" />
+          <FontSizeStepper fontSize={fontSize} onChange={onFontSizeChange} />
+          <span className="h-4 w-px bg-gray-300 dark:bg-gray-600" />
           <button
             onClick={onToggleJournal}
             className="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
@@ -195,12 +248,15 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
         )}
 
         {!loading && !error && verses.length > 0 && (
-          <div className="max-w-3xl mx-auto px-6 py-8">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
+          <div className="max-w-3xl mx-auto px-6 py-8" style={contentStyle}>
+            <h2
+              className="font-semibold text-gray-900 dark:text-gray-100 mb-6"
+              style={{ fontSize: `${fontSize + 4}px` }}
+            >
               {reading.book} {reading.chapter}
             </h2>
-            {displayMode === 'verse' && <VerseByVerseView verses={verses} />}
-            {displayMode === 'paragraph' && <ParagraphView verses={verses} />}
+            {displayMode === 'verse' && <VerseByVerseView verses={verses} fontSize={fontSize} />}
+            {displayMode === 'paragraph' && <ParagraphView verses={verses} fontSize={fontSize} />}
             {displayMode === 'reader' && <ReaderView verses={verses} />}
           </div>
         )}

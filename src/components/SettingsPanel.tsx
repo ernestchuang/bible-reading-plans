@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import type { ReadingList, Translation } from '../types';
+import type { ReadingList, Translation, FontFamily, FontSize } from '../types';
+import { FONT_OPTIONS, FONT_SIZES, getFontCss } from '../data/fonts';
 
 interface SettingsPanelProps {
   lists: ReadingList[];
@@ -11,6 +12,10 @@ interface SettingsPanelProps {
   setTranslation: (t: Translation) => void;
   daysToGenerate: number;
   setDaysToGenerate: (n: number) => void;
+  fontFamily: FontFamily;
+  setFontFamily: (f: FontFamily) => void;
+  fontSize: FontSize;
+  setFontSize: (s: FontSize) => void;
   resetAll: () => void;
 }
 
@@ -57,6 +62,10 @@ export function SettingsPanel({
   setTranslation,
   daysToGenerate,
   setDaysToGenerate,
+  fontFamily,
+  setFontFamily,
+  fontSize,
+  setFontSize,
   resetAll,
 }: SettingsPanelProps) {
   // Pre-compute book/chapter for each list from offsets
@@ -131,6 +140,68 @@ export function SettingsPanel({
             onChange={(e) => setDaysToGenerate(Number(e.target.value))}
             className={inputClasses}
           />
+        </div>
+      </div>
+
+      {/* Reading appearance */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Reading Appearance
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* Font family */}
+          <div>
+            <label htmlFor="font-family" className={labelClasses}>
+              Font
+            </label>
+            <select
+              id="font-family"
+              value={fontFamily}
+              onChange={(e) => setFontFamily(e.target.value as FontFamily)}
+              className={inputClasses}
+            >
+              {FONT_OPTIONS.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.label} ({f.category})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Font size */}
+          <div>
+            <label htmlFor="font-size" className={labelClasses}>
+              Font Size
+            </label>
+            <select
+              id="font-size"
+              value={fontSize}
+              onChange={(e) => setFontSize(Number(e.target.value) as FontSize)}
+              className={inputClasses}
+            >
+              {FONT_SIZES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label} ({s.value}px)
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Live preview */}
+        <div className="mt-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">Preview</p>
+          <p
+            style={{
+              fontFamily: getFontCss(fontFamily),
+              fontSize: `${fontSize}px`,
+              lineHeight: `${fontSize + 8}px`,
+            }}
+            className="text-gray-800 dark:text-gray-200"
+          >
+            In the beginning God created the heavens and the earth. The earth was
+            formless and void, and darkness was over the surface of the deep.
+          </p>
         </div>
       </div>
 
