@@ -7,11 +7,13 @@ import { DailyView } from './components/DailyView';
 import { BibleReader } from './components/BibleReader';
 import { PlanView } from './components/PlanView';
 import { SettingsPanel } from './components/SettingsPanel';
+import { JournalPane } from './components/journal/JournalPane';
 
 function App() {
   const state = useReadingPlan();
   const [activeTab, setActiveTab] = useState('Today');
   const [activeReading, setActiveReading] = useState<Reading | null>(null);
+  const [journalOpen, setJournalOpen] = useState(false);
 
   // Today's readings are based on current listOffsets (position-based, not day-based).
   // Completed readings have already advanced the offset, so we need to show
@@ -69,12 +71,21 @@ function App() {
             </div>
           </div>
 
-          {/* Bible text reader - fills remaining space */}
-          <div className="flex-1 min-h-0">
-            <BibleReader
-              reading={activeReading}
-              translation={state.translation}
-            />
+          {/* Bible text reader + journal - fills remaining space */}
+          <div className="flex-1 min-h-0 flex flex-row">
+            <div className={journalOpen ? 'w-1/2 min-w-0 h-full' : 'w-full h-full'}>
+              <BibleReader
+                reading={activeReading}
+                translation={state.translation}
+                onToggleJournal={() => setJournalOpen((p) => !p)}
+                journalOpen={journalOpen}
+              />
+            </div>
+            {journalOpen && (
+              <div className="w-1/2 min-w-0 h-full border-l border-gray-200">
+                <JournalPane reading={activeReading} />
+              </div>
+            )}
           </div>
         </>
       ) : (

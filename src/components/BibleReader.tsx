@@ -4,9 +4,11 @@ import { getBibleReadingUrl } from '../utils/bibleLinks';
 interface BibleReaderProps {
   reading: Reading | null;
   translation: Translation;
+  onToggleJournal: () => void;
+  journalOpen: boolean;
 }
 
-export function BibleReader({ reading, translation }: BibleReaderProps) {
+export function BibleReader({ reading, translation, onToggleJournal, journalOpen }: BibleReaderProps) {
   if (!reading) {
     return (
       <div className="flex items-center justify-center h-full bg-gray-100 text-gray-400">
@@ -25,14 +27,22 @@ export function BibleReader({ reading, translation }: BibleReaderProps) {
           {reading.book} {reading.chapter}
           <span className="text-gray-400 ml-2">({translation})</span>
         </span>
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-indigo-600 hover:text-indigo-800 transition-colors"
-        >
-          Open in new tab &rarr;
-        </a>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onToggleJournal}
+            className="text-xs text-indigo-600 hover:text-indigo-800 transition-colors"
+          >
+            {journalOpen ? 'Close Journal' : 'Journal'}
+          </button>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-indigo-600 hover:text-indigo-800 transition-colors"
+          >
+            Open in new tab &rarr;
+          </a>
+        </div>
       </div>
 
       {/* Iframe */}

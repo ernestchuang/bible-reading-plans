@@ -10,7 +10,12 @@ A daily Bible reading app based on **Dr. Grant Horner's Bible Reading System** �
 - **Progress tracking** — completion state resets daily, list positions persist
 - **Markdown export** and print-friendly layout
 - **Settings** — adjust any list's starting position, start date, and translation
-- **Native desktop app** for macOS and Linux
+- **Journal** — write reflections alongside your reading with a split-pane WYSIWYG markdown editor
+  - Entries are tied to book and chapter, not the reading plan
+  - Write-once / append-only with entry-to-entry linking (reply to a previous reflection)
+  - Entries saved as individual `.md` files with YAML frontmatter
+  - Chapter view (entries for the current book/chapter) and Date view (all entries by month)
+- **Native desktop app** for macOS, Linux, and Windows
 
 ## Installation
 
