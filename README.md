@@ -15,6 +15,7 @@ A daily Bible reading app based on **Dr. Grant Horner's Bible Reading System** â
   - Write-once / append-only with entry-to-entry linking (reply to a previous reflection)
   - Entries saved as individual `.md` files with YAML frontmatter
   - Chapter view (entries for the current book/chapter) and Date view (all entries by month)
+  - Built-in markdown formatting guide for new users
 - **Native desktop app** for macOS, Linux, and Windows
 
 ## Installation
