@@ -8,6 +8,7 @@ import { BibleReader } from './components/BibleReader';
 import { PlanView } from './components/PlanView';
 import { SettingsPanel } from './components/SettingsPanel';
 import { JournalPane } from './components/journal/JournalPane';
+import { clearCache } from './utils/bibleCache';
 
 function App() {
   const state = useReadingPlan();
@@ -159,6 +160,7 @@ function App() {
                 fontSize={state.fontSize}
                 setFontSize={state.setFontSize}
                 resetAll={state.resetAll}
+                onClearCache={clearCache}
               />
             )}
           </div>

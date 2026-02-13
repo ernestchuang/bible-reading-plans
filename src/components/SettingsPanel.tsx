@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { ReadingList, Translation, FontFamily, FontSize } from '../types';
 import { FONT_OPTIONS, FONT_SIZES, getFontCss } from '../data/fonts';
 
@@ -17,6 +17,7 @@ interface SettingsPanelProps {
   fontSize: FontSize;
   setFontSize: (s: FontSize) => void;
   resetAll: () => void;
+  onClearCache: () => Promise<void>;
 }
 
 /** Convert a flat offset (0-based) into a { bookIndex, chapter } for a given list. */
@@ -67,7 +68,24 @@ export function SettingsPanel({
   fontSize,
   setFontSize,
   resetAll,
+  onClearCache,
 }: SettingsPanelProps) {
+  const [cacheClearing, setCacheClearing] = useState(false);
+  const [cacheCleared, setCacheCleared] = useState(false);
+
+  async function handleClearCache() {
+    setCacheClearing(true);
+    setCacheCleared(false);
+    try {
+      await onClearCache();
+      setCacheCleared(true);
+      setTimeout(() => setCacheCleared(false), 2000);
+    } catch {
+      // Silently reset on failure
+    } finally {
+      setCacheClearing(false);
+    }
+  }
   // Pre-compute book/chapter for each list from offsets
   const listPositions = useMemo(
     () =>
@@ -279,15 +297,25 @@ export function SettingsPanel({
         </div>
       </div>
 
-      {/* Reset button */}
+      {/* Data management */}
       <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-        <button
-          type="button"
-          onClick={resetAll}
-          className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-700 rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
-        >
-          Reset All to Defaults
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={handleClearCache}
+            disabled={cacheClearing}
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+          >
+            {cacheClearing ? 'Clearing...' : cacheCleared ? 'Cache Cleared!' : 'Clear Offline Cache'}
+          </button>
+          <button
+            type="button"
+            onClick={resetAll}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-700 rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
+          >
+            Reset All to Defaults
+          </button>
+        </div>
       </div>
     </div>
   );

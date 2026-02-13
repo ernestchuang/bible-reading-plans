@@ -13,39 +13,41 @@
   <!-- Semi-transparent gray background rounded square -->
   <rect x="0" y="0" width="512" height="512" rx="110" fill="rgba(180,180,180,0.45)"/>
 
-  <!-- Book shadow -->
-  <rect x="89" y="35" width="350" height="400" rx="10" fill="rgba(0,0,0,0.2)"/>
+  <g transform="translate(0, 30)">
+    <!-- Book shadow -->
+    <rect x="89" y="35" width="350" height="400" rx="10" fill="rgba(0,0,0,0.2)"/>
 
-  <!-- Back cover -->
-  <rect x="81" y="25" width="350" height="400" rx="10" fill="url(#cover)"/>
+    <!-- Back cover -->
+    <rect x="81" y="25" width="350" height="400" rx="10" fill="url(#cover)"/>
 
-  <!-- Pages (visible from side — gold) -->
-  <rect x="94" y="35" width="325" height="380" rx="5" fill="url(#pages)"/>
+    <!-- Pages (visible from side — gold) -->
+    <rect x="94" y="35" width="325" height="380" rx="5" fill="url(#pages)"/>
 
-  <!-- Front cover -->
-  <rect x="81" y="25" width="335" height="400" rx="10" fill="url(#cover)"/>
+    <!-- Front cover -->
+    <rect x="81" y="25" width="335" height="400" rx="10" fill="url(#cover)"/>
 
-  <!-- Spine highlight -->
-  <rect x="81" y="25" width="15" height="400" rx="8" fill="rgba(255,255,255,0.12)"/>
+    <!-- Spine highlight -->
+    <rect x="81" y="25" width="15" height="400" rx="8" fill="rgba(255,255,255,0.12)"/>
 
-  <!-- Leather texture overlay -->
-  <rect x="81" y="25" width="335" height="400" rx="10" fill="rgba(0,0,0,0.06)"/>
+    <!-- Leather texture overlay -->
+    <rect x="81" y="25" width="335" height="400" rx="10" fill="rgba(0,0,0,0.06)"/>
 
-  <!-- Cover border decoration (darker) -->
-  <rect x="106" y="50" width="285" height="350" rx="5" fill="none" stroke="rgba(40,4,12,0.75)" stroke-width="2.5"/>
+    <!-- Cover border decoration (darker) -->
+    <rect x="106" y="50" width="285" height="350" rx="5" fill="none" stroke="rgba(40,4,12,0.75)" stroke-width="2.5"/>
 
-  <!-- Inner border (darker) -->
-  <rect x="116" y="60" width="265" height="330" rx="4" fill="none" stroke="rgba(40,4,12,0.5)" stroke-width="1.25"/>
+    <!-- Inner border (darker) -->
+    <rect x="116" y="60" width="265" height="330" rx="4" fill="none" stroke="rgba(40,4,12,0.5)" stroke-width="1.25"/>
 
-  <!-- Cross on cover (darker for contrast) -->
-  <rect x="237" y="98" width="22" height="100" rx="4" fill="#2E0510"/>
-  <rect x="215" y="123" width="68" height="22" rx="4" fill="#2E0510"/>
+    <!-- Cross on cover (darker for contrast) -->
+    <rect x="237" y="98" width="22" height="100" rx="4" fill="#2E0510"/>
+    <rect x="215" y="123" width="68" height="22" rx="4" fill="#2E0510"/>
 
-  <!-- Decorative lines below cross (darker) -->
-  <rect x="181" y="255" width="135" height="4" rx="2" fill="rgba(40,4,12,0.65)"/>
-  <rect x="201" y="270" width="95" height="4" rx="2" fill="rgba(40,4,12,0.65)"/>
+    <!-- Decorative lines below cross (darker) -->
+    <rect x="181" y="255" width="135" height="4" rx="2" fill="rgba(40,4,12,0.65)"/>
+    <rect x="201" y="270" width="95" height="4" rx="2" fill="rgba(40,4,12,0.65)"/>
 
-  <!-- Bookmark ribbon hanging below the book (purple) -->
-  <rect x="191" y="425" width="25" height="28" fill="#7B2D8E"/>
-  <polygon points="191,453 191,478 203,466 216,478 216,453" fill="#7B2D8E"/>
+    <!-- Bookmark ribbon hanging below the book (purple) -->
+    <rect x="191" y="425" width="25" height="28" fill="#7B2D8E"/>
+    <polygon points="191,453 191,478 203,466 216,478 216,453" fill="#7B2D8E"/>
+  </g>
 </svg>

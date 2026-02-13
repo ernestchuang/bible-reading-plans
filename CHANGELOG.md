@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-02-13
+
+### Added
+
+- Offline chapter caching: previously-viewed Bible chapters are saved to disk and load instantly on revisit, even without an internet connection
+- "Clear Offline Cache" button in Settings for reclaiming disk space
+
+### Changed
+
+- Adjusted app icon: moved Bible down relative to background for better vertical centering
+
 ## [0.7.0] - 2026-02-13
 
 ### Added
@@ -127,6 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tauri desktop app for macOS and Linux
 - GitHub Actions release workflow
 
+[0.8.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.5.0...v0.6.0

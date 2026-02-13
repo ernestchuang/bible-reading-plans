@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Reading, Translation, Verse, DisplayMode, FontFamily, FontSize } from '../types';
-import { fetchChapter } from '../utils/bibleApi';
+import { fetchChapterCached } from '../utils/bibleCache';
 import { getFontCss, FONT_SIZES } from '../data/fonts';
 
 interface BibleReaderProps {
@@ -173,7 +173,7 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchChapter(book, chapter, trans);
+      const data = await fetchChapterCached(book, chapter, trans);
       setVerses(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load chapter');
