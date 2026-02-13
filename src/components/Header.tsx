@@ -132,7 +132,8 @@ export function Header({
         {/* Tab navigation */}
         <nav className="-mb-px flex gap-6" aria-label="Tabs">
           {([
-            { to: '/today', label: 'Today' },
+            { to: '/read', label: 'Read' },
+            { to: '/plans', label: 'Today' },
             { to: '/plan', label: 'Full Plan' },
             { to: '/settings', label: 'Settings' },
           ] as const).map(({ to, label }) => (

@@ -7,6 +7,7 @@ import { getCalendarReadingsForDay, generateCalendarPlan } from './utils/calenda
 import type { Reading, Theme } from './types';
 import { isCalendarPlan, isCyclingPlan } from './types';
 import { Header } from './components/Header';
+import { ReadView } from './components/ReadView';
 import { DailyView } from './components/DailyView';
 import { BibleReader } from './components/BibleReader';
 import { PlanView } from './components/PlanView';
@@ -96,8 +97,9 @@ function App() {
       />
 
       <Routes>
-        <Route path="/" element={<Navigate to="/today" replace />} />
-        <Route path="/today" element={
+        <Route path="/" element={<Navigate to="/read" replace />} />
+        <Route path="/read" element={<ReadView prefs={prefs} />} />
+        <Route path="/plans" element={
           <>
             {/* Compact reading plan bar */}
             <div className="shrink-0 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
