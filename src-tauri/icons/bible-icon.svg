@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="cover" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#6B0F2B"/>
-      <stop offset="100%" stop-color="#3D0615"/>
+      <stop offset="0%" stop-color="#8A2040"/>
+      <stop offset="100%" stop-color="#5A1025"/>
     </linearGradient>
     <linearGradient id="pages" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#FFD966"/>
@@ -10,42 +10,42 @@
     </linearGradient>
   </defs>
 
-  <!-- Black background circle -->
-  <circle cx="256" cy="256" r="256" fill="#1a1a1a"/>
+  <!-- Semi-transparent gray background rounded square -->
+  <rect x="0" y="0" width="512" height="512" rx="110" fill="rgba(180,180,180,0.45)"/>
 
   <!-- Book shadow -->
-  <rect x="118" y="98" width="280" height="320" rx="8" fill="rgba(0,0,0,0.4)"/>
+  <rect x="89" y="35" width="350" height="400" rx="10" fill="rgba(0,0,0,0.2)"/>
 
   <!-- Back cover -->
-  <rect x="112" y="90" width="280" height="320" rx="8" fill="url(#cover)"/>
+  <rect x="81" y="25" width="350" height="400" rx="10" fill="url(#cover)"/>
 
   <!-- Pages (visible from side — gold) -->
-  <rect x="122" y="98" width="260" height="304" rx="4" fill="url(#pages)"/>
+  <rect x="94" y="35" width="325" height="380" rx="5" fill="url(#pages)"/>
 
   <!-- Front cover -->
-  <rect x="112" y="90" width="268" height="320" rx="8" fill="url(#cover)"/>
+  <rect x="81" y="25" width="335" height="400" rx="10" fill="url(#cover)"/>
 
   <!-- Spine highlight -->
-  <rect x="112" y="90" width="12" height="320" rx="6" fill="rgba(255,255,255,0.08)"/>
+  <rect x="81" y="25" width="15" height="400" rx="8" fill="rgba(255,255,255,0.12)"/>
 
   <!-- Leather texture overlay -->
-  <rect x="112" y="90" width="268" height="320" rx="8" fill="rgba(0,0,0,0.06)"/>
+  <rect x="81" y="25" width="335" height="400" rx="10" fill="rgba(0,0,0,0.06)"/>
 
-  <!-- Cover border decoration (dark burgundy) -->
-  <rect x="132" y="110" width="228" height="280" rx="4" fill="none" stroke="rgba(60,5,18,0.7)" stroke-width="2"/>
+  <!-- Cover border decoration (darker) -->
+  <rect x="106" y="50" width="285" height="350" rx="5" fill="none" stroke="rgba(40,4,12,0.75)" stroke-width="2.5"/>
 
-  <!-- Inner border (dark burgundy) -->
-  <rect x="140" y="118" width="212" height="264" rx="3" fill="none" stroke="rgba(60,5,18,0.45)" stroke-width="1"/>
+  <!-- Inner border (darker) -->
+  <rect x="116" y="60" width="265" height="330" rx="4" fill="none" stroke="rgba(40,4,12,0.5)" stroke-width="1.25"/>
 
-  <!-- Cross on cover (dark burgundy) -->
-  <rect x="237" y="148" width="18" height="80" rx="3" fill="#3D0612"/>
-  <rect x="219" y="168" width="54" height="18" rx="3" fill="#3D0612"/>
+  <!-- Cross on cover (darker for contrast) -->
+  <rect x="237" y="98" width="22" height="100" rx="4" fill="#2E0510"/>
+  <rect x="215" y="123" width="68" height="22" rx="4" fill="#2E0510"/>
 
-  <!-- Decorative lines below cross (dark burgundy) -->
-  <rect x="192" y="258" width="108" height="3" rx="1.5" fill="rgba(60,5,18,0.6)"/>
-  <rect x="208" y="270" width="76" height="3" rx="1.5" fill="rgba(60,5,18,0.6)"/>
+  <!-- Decorative lines below cross (darker) -->
+  <rect x="181" y="255" width="135" height="4" rx="2" fill="rgba(40,4,12,0.65)"/>
+  <rect x="201" y="270" width="95" height="4" rx="2" fill="rgba(40,4,12,0.65)"/>
 
   <!-- Bookmark ribbon hanging below the book (purple) -->
-  <rect x="200" y="410" width="20" height="40" fill="#7B2D8E"/>
-  <polygon points="200,450 200,480 210,465 220,480 220,450" fill="#7B2D8E"/>
+  <rect x="191" y="425" width="25" height="28" fill="#7B2D8E"/>
+  <polygon points="191,453 191,478 203,466 216,478 216,453" fill="#7B2D8E"/>
 </svg>
