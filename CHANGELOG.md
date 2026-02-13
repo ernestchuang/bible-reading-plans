@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-02-13
+
+### Added
+
+- **Faithful M'Cheyne Reading Plan**: replaced the cycling-list approximation with Robert Murray M'Cheyne's original 365-day hand-curated schedule
+  - 4 daily readings labeled Family (1), Family (2), Secret (1), Secret (2)
+  - Multi-chapter readings (e.g., Genesis 9–10) render both chapters with heading dividers
+  - Sub-chapter verse ranges (e.g., Psalm 119:1–24) filter to the specified verses
+- "Current Day" number input in Settings for M'Cheyne plan — jump directly to any day 1–365
+
+### Changed
+
+- M'Cheyne plan is now start-date-based: Day 1 = your start date, wraps at 365 (not tied to Jan 1)
+- Toggling a M'Cheyne reading complete no longer advances a cycling offset — it simply marks the reading done
+- `ReadingPlan` type refactored to a discriminated union (`kind: 'cycling' | 'calendar'`) for clean plan-type branching
+
+### Removed
+
+- Cycling-list M'Cheyne plan (`src/data/mcheyneLists.ts`) — replaced by the faithful calendar version
+
 ## [0.8.0] - 2026-02-13
 
 ### Added
@@ -138,6 +158,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tauri desktop app for macOS and Linux
 - GitHub Actions release workflow
 
+[0.9.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.6.0...v0.6.1

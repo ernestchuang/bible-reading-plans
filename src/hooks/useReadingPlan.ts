@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Translation, ReadingPlan, DisplayMode, Theme, FontFamily, FontSize } from '../types';
+import { isCalendarPlan, getListCount } from '../types';
 import { PLANS, DEFAULT_PLAN_ID, getPlanById } from '../data/plans';
 
 const STORAGE_KEY = 'bible-reading-plan-v2';
@@ -57,12 +58,13 @@ function getToday(): string {
 }
 
 function getDefaultPlanState(plan: ReadingPlan): PerPlanState {
+  const count = getListCount(plan);
   return {
     startDate: getToday(),
-    listOffsets: Array(plan.lists.length).fill(0),
+    listOffsets: Array(count).fill(0),
     completedToday: {
       date: getToday(),
-      lists: Array(plan.lists.length).fill(false),
+      lists: Array(count).fill(false),
     },
   };
 }
@@ -104,7 +106,7 @@ function migrateLegacy(): StoredState | null {
     let completed = legacy.completedToday;
     if (!completed || completed.date !== today) {
       const horner = getPlanById('horner')!;
-      completed = { date: today, lists: Array(horner.lists.length).fill(false) };
+      completed = { date: today, lists: Array(getListCount(horner)).fill(false) };
     }
 
     const migrated: StoredState = {
@@ -153,7 +155,7 @@ function loadFromStorage(): StoredState {
           // Reset completedToday if it's from a different day
           let completed = saved.completedToday;
           if (!completed || completed.date !== today) {
-            completed = { date: today, lists: Array(plan.lists.length).fill(false) };
+            completed = { date: today, lists: Array(getListCount(plan)).fill(false) };
           }
           plans[plan.id] = {
             startDate: saved.startDate ?? defaults.plans[plan.id].startDate,
@@ -198,6 +200,7 @@ export function useReadingPlan(): ReadingPlanState {
   const planState = stored.plans[activePlan.id] ?? getDefaultPlanState(activePlan);
 
   // Reset completedToday if the date has changed (e.g. user left tab open overnight)
+  const listCount = getListCount(activePlan);
   useEffect(() => {
     const today = getToday();
     if (planState.completedToday.date !== today) {
@@ -209,13 +212,13 @@ export function useReadingPlan(): ReadingPlanState {
             ...prev.plans[activePlan.id],
             completedToday: {
               date: today,
-              lists: Array(activePlan.lists.length).fill(false),
+              lists: Array(listCount).fill(false),
             },
           },
         },
       }));
     }
-  }, [planState.completedToday.date, activePlan.id, activePlan.lists.length]);
+  }, [planState.completedToday.date, activePlan.id, listCount]);
 
   // Persist to localStorage
   useEffect(() => {
@@ -294,14 +297,31 @@ export function useReadingPlan(): ReadingPlanState {
     setStored((prev) => ({ ...prev, daysToGenerate: n }));
   }
 
-  // Toggle a reading: check advances the offset, uncheck reverts it
+  // Toggle a reading: for cycling plans, check advances the offset; for calendar plans, just toggle completion
   const toggleReading = useCallback(
     (listIndex: number) => {
       setStored((prev) => {
         const ps = prev.plans[activePlan.id];
         const wasCompleted = ps.completedToday.lists[listIndex];
-        const list = activePlan.lists[listIndex];
+        const nextLists = [...ps.completedToday.lists];
+        nextLists[listIndex] = !wasCompleted;
 
+        if (isCalendarPlan(activePlan)) {
+          // Calendar plan: only toggle completion, no offset changes
+          return {
+            ...prev,
+            plans: {
+              ...prev.plans,
+              [activePlan.id]: {
+                ...ps,
+                completedToday: { ...ps.completedToday, lists: nextLists },
+              },
+            },
+          };
+        }
+
+        // Cycling plan: advance/revert offset
+        const list = activePlan.lists[listIndex];
         const nextOffsets = [...ps.listOffsets];
         if (wasCompleted) {
           nextOffsets[listIndex] =
@@ -310,9 +330,6 @@ export function useReadingPlan(): ReadingPlanState {
           nextOffsets[listIndex] =
             (nextOffsets[listIndex] + 1) % list.totalChapters;
         }
-
-        const nextLists = [...ps.completedToday.lists];
-        nextLists[listIndex] = !wasCompleted;
 
         return {
           ...prev,
@@ -327,7 +344,7 @@ export function useReadingPlan(): ReadingPlanState {
         };
       });
     },
-    [activePlan.id, activePlan.lists]
+    [activePlan]
   );
 
   function resetAll() {

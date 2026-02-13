@@ -1,10 +1,10 @@
 # Bible Reading Plan
 
-A daily Bible reading app supporting multiple reading plans — including **Dr. Grant Horner's Bible Reading System** and **M'Cheyne's Reading Plan**. Each plan uses independent cycling lists, so you never read the same combination twice.
+A daily Bible reading app supporting multiple reading plans — including **Dr. Grant Horner's Bible Reading System** and **M'Cheyne's Reading Plan**.
 
 ## Features
 
-- **Multiple reading plans** — switch between Horner's (10 lists) and M'Cheyne's (4 lists) via a header dropdown
+- **Multiple reading plans** — switch between Horner's (10 cycling lists) and M'Cheyne's (365-day calendar) via a header dropdown
 - **Color-coded reading lists** with check-off tracking
 - **Native Bible reader** — click a chapter to read it inline with verse numbers, powered by the Bolls Life API (NASB95, LSB, ESV, KJV)
 - **Display modes** — verse-by-verse, paragraph, and reader's layout (LSB includes poetry formatting)
@@ -135,11 +135,13 @@ You read **one chapter per day** from each of **10 lists**. When you finish a li
 
 ### M'Cheyne's Reading Plan
 
-Adapted from Robert Murray M'Cheyne's calendar into **4 cycling lists** covering the entire Bible:
+Robert Murray M'Cheyne's original **365-day** schedule with **4 daily readings** — two for family worship and two for private devotion. The plan covers the Old Testament once and the New Testament and Psalms twice per year.
 
-| # | List | Books | Chapters |
-|---|------|-------|----------|
-| 1 | Family (AM) | Genesis — Deuteronomy | 187 |
-| 2 | Family (PM) | Joshua — Esther | 249 |
-| 3 | Poetry & Prophets | Job — Malachi | 493 |
-| 4 | New Testament | Matthew — Revelation | 260 |
+| # | Column | Purpose |
+|---|--------|---------|
+| 1 | Family (1) | Family worship — first reading |
+| 2 | Family (2) | Family worship — second reading |
+| 3 | Secret (1) | Private devotion — first reading |
+| 4 | Secret (2) | Private devotion — second reading |
+
+Your **start date** determines Day 1 — jump in any time of year. Includes multi-chapter readings and sub-chapter verse ranges exactly as M'Cheyne designed them.

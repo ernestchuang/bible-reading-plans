@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import type { DayPlan } from '../types';
+import { formatReading } from '../types';
 import { exportToMarkdown } from '../utils/planGenerator';
 
 const colorMap: Record<string, string> = {
@@ -106,7 +107,7 @@ export function PlanView({ plan }: PlanViewProps) {
                         className="inline-block w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: accent }}
                       />
-                      {reading.book} {reading.chapter}
+                      {formatReading(reading)}
                     </span>
                   );
                 })}

@@ -4,6 +4,8 @@ import { FONT_OPTIONS, FONT_SIZES, getFontCss } from '../data/fonts';
 
 interface SettingsPanelProps {
   lists: ReadingList[];
+  isCalendarPlan: boolean;
+  currentDayIndex: number;
   startDate: string;
   setStartDate: (date: string) => void;
   listOffsets: number[];
@@ -55,6 +57,8 @@ const labelClasses = 'block text-sm font-medium text-gray-700 dark:text-gray-300
 
 export function SettingsPanel({
   lists,
+  isCalendarPlan,
+  currentDayIndex,
   startDate,
   setStartDate,
   listOffsets,
@@ -105,12 +109,48 @@ export function SettingsPanel({
     setListOffset(listIndex, offset);
   }
 
+  // Current M'Cheyne day (1-based)
+  const currentDay = (currentDayIndex % 365) + 1;
+
+  function handleCurrentDayChange(day: number) {
+    const clamped = Math.max(1, Math.min(day, 365));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const newStart = new Date(today);
+    newStart.setDate(today.getDate() - (clamped - 1));
+    const yyyy = newStart.getFullYear();
+    const mm = String(newStart.getMonth() + 1).padStart(2, '0');
+    const dd = String(newStart.getDate()).padStart(2, '0');
+    setStartDate(`${yyyy}-${mm}-${dd}`);
+  }
+
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Settings</h2>
 
       {/* General settings */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {/* Current day — calendar plans only */}
+        {isCalendarPlan && (
+          <div>
+            <label htmlFor="current-day" className={labelClasses}>
+              Current Day
+            </label>
+            <input
+              id="current-day"
+              type="number"
+              min={1}
+              max={365}
+              value={currentDay}
+              onChange={(e) => handleCurrentDayChange(Number(e.target.value))}
+              className={inputClasses}
+            />
+            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+              M'Cheyne day 1–365
+            </p>
+          </div>
+        )}
+
         {/* Start date */}
         <div>
           <label htmlFor="start-date" className={labelClasses}>
@@ -223,79 +263,81 @@ export function SettingsPanel({
         </div>
       </div>
 
-      {/* List position adjustments */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          List Starting Positions
-        </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Adjust where each list begins reading. Useful if you want to pick up
-          where you left off.
-        </p>
+      {/* List position adjustments — only for cycling plans */}
+      {!isCalendarPlan && lists.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            List Starting Positions
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Adjust where each list begins reading. Useful if you want to pick up
+            where you left off.
+          </p>
 
-        <div className="space-y-4">
-          {lists.map((list, listIndex) => {
-            const pos = listPositions[listIndex];
-            const currentBook = list.books[pos.bookIndex];
+          <div className="space-y-4">
+            {lists.map((list, listIndex) => {
+              const pos = listPositions[listIndex];
+              const currentBook = list.books[pos.bookIndex];
 
-            return (
-              <div
-                key={list.id}
-                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-              >
-                {/* List name */}
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-28 shrink-0">
-                  {list.name}
-                </span>
-
-                {/* Book selector */}
-                <select
-                  value={pos.bookIndex}
-                  onChange={(e) =>
-                    handleBookChange(listIndex, Number(e.target.value))
-                  }
-                  className={`${inputClasses} sm:w-48`}
-                  aria-label={`Book for ${list.name}`}
+              return (
+                <div
+                  key={list.id}
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
                 >
-                  {list.books.map((book, bookIdx) => (
-                    <option key={book.name} value={bookIdx}>
-                      {book.name}
-                    </option>
-                  ))}
-                </select>
-
-                {/* Chapter input */}
-                <div className="flex items-center gap-2">
-                  <label
-                    htmlFor={`chapter-${list.id}`}
-                    className="text-sm text-gray-500 dark:text-gray-400"
-                  >
-                    Ch.
-                  </label>
-                  <input
-                    id={`chapter-${list.id}`}
-                    type="number"
-                    min={1}
-                    max={currentBook.chapters}
-                    value={pos.chapter}
-                    onChange={(e) =>
-                      handleChapterChange(
-                        listIndex,
-                        pos.bookIndex,
-                        Number(e.target.value)
-                      )
-                    }
-                    className={`${inputClasses} w-20`}
-                  />
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
-                    / {currentBook.chapters}
+                  {/* List name */}
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-28 shrink-0">
+                    {list.name}
                   </span>
+
+                  {/* Book selector */}
+                  <select
+                    value={pos.bookIndex}
+                    onChange={(e) =>
+                      handleBookChange(listIndex, Number(e.target.value))
+                    }
+                    className={`${inputClasses} sm:w-48`}
+                    aria-label={`Book for ${list.name}`}
+                  >
+                    {list.books.map((book, bookIdx) => (
+                      <option key={book.name} value={bookIdx}>
+                        {book.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Chapter input */}
+                  <div className="flex items-center gap-2">
+                    <label
+                      htmlFor={`chapter-${list.id}`}
+                      className="text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      Ch.
+                    </label>
+                    <input
+                      id={`chapter-${list.id}`}
+                      type="number"
+                      min={1}
+                      max={currentBook.chapters}
+                      value={pos.chapter}
+                      onChange={(e) =>
+                        handleChapterChange(
+                          listIndex,
+                          pos.bookIndex,
+                          Number(e.target.value)
+                        )
+                      }
+                      className={`${inputClasses} w-20`}
+                    />
+                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                      / {currentBook.chapters}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Data management */}
       <div className="pt-4 border-t border-gray-200 dark:border-gray-700">

@@ -1,4 +1,5 @@
 import type { ReadingList, Reading, DayPlan } from '../types';
+import { formatReading } from '../types';
 
 // Given a 0-based position offset into a list's total chapters,
 // determine which book and chapter it maps to
@@ -74,7 +75,7 @@ export function exportToMarkdown(plan: DayPlan[]): string {
     lines.push('| # | List | Reading |');
     lines.push('|---|------|---------|');
     for (const r of day.readings) {
-      lines.push(`| ${r.listId} | ${r.listName} | ${r.book} ${r.chapter} |`);
+      lines.push(`| ${r.listId} | ${r.listName} | ${formatReading(r)} |`);
     }
     lines.push('');
   }

@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Reading, Translation, Verse, DisplayMode, FontFamily, FontSize } from '../types';
+import { formatReading } from '../types';
 import { fetchChapterCached } from '../utils/bibleCache';
 import { getFontCss, FONT_SIZES } from '../data/fonts';
+
+interface ChapterBlock {
+  book: string;
+  chapter: number;
+  verses: Verse[];
+}
 
 interface BibleReaderProps {
   reading: Reading | null;
@@ -157,7 +164,7 @@ function ReaderView({ verses }: { verses: Verse[] }) {
 }
 
 export function BibleReader({ reading, translation, displayMode, onDisplayModeChange, fontFamily, fontSize, onFontSizeChange, onToggleJournal, journalOpen }: BibleReaderProps) {
-  const [verses, setVerses] = useState<Verse[]>([]);
+  const [blocks, setBlocks] = useState<ChapterBlock[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -169,33 +176,56 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
     lineHeight: `${fontSize + 8}px`,
   };
 
-  const loadChapter = useCallback(async (book: string, chapter: number, trans: Translation) => {
+  const loadReading = useCallback(async (r: Reading, trans: Translation) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchChapterCached(book, chapter, trans);
-      setVerses(data);
+      const startCh = r.chapter;
+      const endCh = r.endChapter ?? r.chapter;
+      const newBlocks: ChapterBlock[] = [];
+
+      for (let ch = startCh; ch <= endCh; ch++) {
+        let verses = await fetchChapterCached(r.book, ch, trans);
+
+        // Filter verses for sub-chapter ranges (single-chapter readings only)
+        if (r.startVerse != null && r.endVerse != null && startCh === endCh) {
+          verses = verses.filter(
+            (v) => v.verse >= r.startVerse! && v.verse <= r.endVerse!
+          );
+        }
+
+        newBlocks.push({ book: r.book, chapter: ch, verses });
+      }
+
+      setBlocks(newBlocks);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load chapter');
-      setVerses([]);
+      setError(err instanceof Error ? err.message : 'Failed to load reading');
+      setBlocks([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Stable key for reading identity
+  const readingKey = reading
+    ? `${reading.book}|${reading.chapter}|${reading.endChapter ?? ''}|${reading.startVerse ?? ''}|${reading.endVerse ?? ''}`
+    : null;
+
   useEffect(() => {
     if (!reading) {
-      setVerses([]);
+      setBlocks([]);
       setError(null);
       return;
     }
-    loadChapter(reading.book, reading.chapter, translation);
-  }, [reading?.book, reading?.chapter, translation, loadChapter]);
+    loadReading(reading, translation);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readingKey, translation, loadReading]);
 
   // Reset scroll when reading changes
   useEffect(() => {
     scrollRef.current?.scrollTo(0, 0);
-  }, [reading?.book, reading?.chapter, translation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readingKey, translation]);
 
   if (!reading) {
     return (
@@ -210,7 +240,7 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
       {/* Reader toolbar */}
       <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {reading.book} {reading.chapter}
+          {formatReading(reading)}
           <span className="text-gray-400 dark:text-gray-500 ml-2">({translation})</span>
         </span>
         <div className="flex items-center gap-2">
@@ -239,7 +269,7 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
           <div className="flex flex-col items-center justify-center h-full gap-3">
             <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
             <button
-              onClick={() => loadChapter(reading.book, reading.chapter, translation)}
+              onClick={() => loadReading(reading, translation)}
               className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
             >
               Retry
@@ -247,17 +277,21 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
           </div>
         )}
 
-        {!loading && !error && verses.length > 0 && (
+        {!loading && !error && blocks.length > 0 && (
           <div className="max-w-3xl mx-auto px-6 py-8" style={contentStyle}>
-            <h2
-              className="font-semibold text-gray-900 dark:text-gray-100 mb-6"
-              style={{ fontSize: `${fontSize + 4}px` }}
-            >
-              {reading.book} {reading.chapter}
-            </h2>
-            {displayMode === 'verse' && <VerseByVerseView verses={verses} fontSize={fontSize} />}
-            {displayMode === 'paragraph' && <ParagraphView verses={verses} fontSize={fontSize} />}
-            {displayMode === 'reader' && <ReaderView verses={verses} />}
+            {blocks.map((block, blockIdx) => (
+              <div key={`${block.book}-${block.chapter}`}>
+                <h2
+                  className={`font-semibold text-gray-900 dark:text-gray-100 mb-6 ${blockIdx > 0 ? 'mt-10 pt-6 border-t border-gray-200 dark:border-gray-700' : ''}`}
+                  style={{ fontSize: `${fontSize + 4}px` }}
+                >
+                  {block.book} {block.chapter}
+                </h2>
+                {displayMode === 'verse' && <VerseByVerseView verses={block.verses} fontSize={fontSize} />}
+                {displayMode === 'paragraph' && <ParagraphView verses={block.verses} fontSize={fontSize} />}
+                {displayMode === 'reader' && <ReaderView verses={block.verses} />}
+              </div>
+            ))}
           </div>
         )}
       </div>

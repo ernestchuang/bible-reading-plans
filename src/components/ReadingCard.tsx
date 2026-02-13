@@ -1,3 +1,4 @@
+import { formatReading } from '../types';
 import type { Reading } from '../types';
 
 const colorMap: Record<string, string> = {
@@ -52,14 +53,14 @@ export function ReadingCard({ reading, isActive, isCompleted, onClick, onToggleC
             {reading.listName}
           </p>
           <p className={`text-sm font-bold whitespace-nowrap ${isCompleted ? 'text-green-700 dark:text-green-400 line-through' : 'text-gray-900 dark:text-gray-100'}`}>
-            {reading.book} {reading.chapter}
+            {formatReading(reading)}
           </p>
         </div>
         {/* Checkbox */}
         <span
           role="checkbox"
           aria-checked={isCompleted}
-          aria-label={`Mark ${reading.book} ${reading.chapter} as ${isCompleted ? 'incomplete' : 'complete'}`}
+          aria-label={`Mark ${formatReading(reading)} as ${isCompleted ? 'incomplete' : 'complete'}`}
           onClick={onToggleComplete}
           className={`shrink-0 mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
             isCompleted

@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useReadingPlan } from './hooks/useReadingPlan';
 import { getReadingsForDay, generatePlan } from './utils/planGenerator';
+import { getCalendarReadingsForDay, generateCalendarPlan } from './utils/calendarPlanGenerator';
 import type { Reading, Theme } from './types';
+import { isCalendarPlan, isCyclingPlan } from './types';
 import { Header } from './components/Header';
 import { DailyView } from './components/DailyView';
 import { BibleReader } from './components/BibleReader';
@@ -43,32 +45,32 @@ function App() {
     return () => mql.removeEventListener('change', handleChange);
   }, [state.theme]);
 
-  const lists = state.activePlan.lists;
+  const plan = state.activePlan;
 
-  // Today's readings are based on current listOffsets (position-based, not day-based).
-  // Completed readings have already advanced the offset, so we need to show
-  // the chapter BEFORE the offset for completed items, and AT the offset for incomplete.
-  const todayReadings = useMemo(
-    () => getReadingsForDay(0, state.listOffsets, lists),
-    [state.listOffsets, lists]
-  );
+  // Today's readings — calendar plans look up by day index, cycling plans use offsets
+  const todayReadings = useMemo(() => {
+    if (isCalendarPlan(plan)) {
+      return getCalendarReadingsForDay(plan, state.currentDayIndex);
+    }
+    return getReadingsForDay(0, state.listOffsets, plan.lists);
+  }, [plan, state.currentDayIndex, state.listOffsets]);
 
-  // Full Plan projects forward from current positions
-  const fullPlan = useMemo(
-    () =>
-      generatePlan(
-        new Date(new Date().toISOString().split('T')[0] + 'T00:00:00'),
-        state.daysToGenerate,
-        state.listOffsets,
-        lists
-      ),
-    [state.daysToGenerate, state.listOffsets, lists]
-  );
+  // Full Plan projects forward from current day
+  const fullPlan = useMemo(() => {
+    if (isCalendarPlan(plan)) {
+      return generateCalendarPlan(plan, state.currentDayIndex, state.daysToGenerate);
+    }
+    return generatePlan(
+      new Date(new Date().toISOString().split('T')[0] + 'T00:00:00'),
+      state.daysToGenerate,
+      state.listOffsets,
+      plan.lists
+    );
+  }, [plan, state.currentDayIndex, state.daysToGenerate, state.listOffsets]);
 
   function handleToggleComplete(listIndex: number) {
-    // If this reading is currently active in the reader, clear it
-    // (the offset is about to change so the reading object will be stale)
-    if (activeReading && activeReading.listId === todayReadings[listIndex].listId) {
+    // For cycling plans, clear the active reading since the offset is about to change
+    if (isCyclingPlan(plan) && activeReading && activeReading.listId === todayReadings[listIndex].listId) {
       setActiveReading(null);
     }
     state.toggleReading(listIndex);
@@ -146,7 +148,9 @@ function App() {
             )}
             {activeTab === 'Settings' && (
               <SettingsPanel
-                lists={lists}
+                lists={isCyclingPlan(plan) ? plan.lists : []}
+                isCalendarPlan={isCalendarPlan(plan)}
+                currentDayIndex={state.currentDayIndex}
                 startDate={state.startDate}
                 setStartDate={state.setStartDate}
                 listOffsets={state.listOffsets}
