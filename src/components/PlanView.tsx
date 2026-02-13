@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
-import type { DayPlan, Translation } from '../types';
-import { getBibleReadingUrl } from '../utils/bibleLinks';
+import type { DayPlan } from '../types';
 import { exportToMarkdown } from '../utils/planGenerator';
 
 const colorMap: Record<string, string> = {
@@ -18,10 +17,9 @@ const colorMap: Record<string, string> = {
 
 interface PlanViewProps {
   plan: DayPlan[];
-  translation: Translation;
 }
 
-export function PlanView({ plan, translation }: PlanViewProps) {
+export function PlanView({ plan }: PlanViewProps) {
   const handleDownload = useCallback(() => {
     const markdown = exportToMarkdown(plan);
     const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
@@ -90,28 +88,20 @@ export function PlanView({ plan, translation }: PlanViewProps) {
               {/* Readings row */}
               <div className="px-4 py-3 flex flex-wrap gap-2">
                 {day.readings.map((reading) => {
-                  const url = getBibleReadingUrl(
-                    reading.book,
-                    reading.chapter,
-                    translation
-                  );
                   const accent =
                     colorMap[reading.listColor] ?? '#6b7280';
 
                   return (
-                    <a
+                    <span
                       key={reading.listId}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 bg-gray-100"
                     >
                       <span
                         className="inline-block w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: accent }}
                       />
                       {reading.book} {reading.chapter}
-                    </a>
+                    </span>
                   );
                 })}
               </div>

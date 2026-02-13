@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-02-12
+
+### Changed
+
+- Replaced iframe-based Bible reader with native text rendering powered by the [Bolls Life Bible API](https://bolls.life/api/)
+- Bible text now renders inline with superscript verse numbers, loading state, and error/retry handling
+- Full Plan view readings changed from external links to plain text pills (print-friendly)
+- Removed dependency on literalword.com and biblegateway.com
+
+### Removed
+
+- `src/utils/bibleLinks.ts` (iframe URL generation) — replaced by `src/utils/bibleApi.ts`
+- "Open in new tab" link from the Bible reader toolbar
+
 ## [0.4.0] - 2026-02-12
 
 ### Added
@@ -71,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tauri desktop app for macOS and Linux
 - GitHub Actions release workflow
 
+[0.5.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.2.1...v0.3.0

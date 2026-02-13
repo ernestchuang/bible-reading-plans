@@ -32,4 +32,10 @@ export interface ReadingPlan {
   lists: ReadingList[];
 }
 
+export interface Verse {
+  pk: number;
+  verse: number;
+  text: string;
+}
+
 export type Translation = 'NASB95' | 'LSB' | 'ESV' | 'KJV';
