@@ -86,11 +86,10 @@ export function JournalEditor({ onSave, onCancel, linkedTo, fontFamily, fontSize
         ref={containerRef}
         className="flex-1 min-h-0 overflow-y-auto"
         style={{
-          '--crepe-font-default': fontCss,
-          '--crepe-font-title': fontCss,
+          fontFamily: fontCss,
           fontSize: `${fontSize}px`,
           lineHeight: `${fontSize + 8}px`,
-        } as React.CSSProperties}
+        }}
       />
 
       {showHelp && (

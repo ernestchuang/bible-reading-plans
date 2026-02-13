@@ -141,7 +141,21 @@ html.warm-dark .dark\:hover\:text-gray-300:hover {
   --crepe-color-surface-low: #1A1410;
 }
 
-/* Allow font size to be controlled by container */
+/* Override Milkdown Crepe theme fonts — inherit from container */
+.milkdown {
+  font-family: inherit !important;
+}
+
+.milkdown .ProseMirror h1,
+.milkdown .ProseMirror h2,
+.milkdown .ProseMirror h3,
+.milkdown .ProseMirror h4,
+.milkdown .ProseMirror h5,
+.milkdown .ProseMirror h6 {
+  font-family: inherit !important;
+}
+
+/* Allow font size / line-height to be controlled by container */
 .milkdown .ProseMirror p {
   font-size: inherit;
   line-height: inherit;
