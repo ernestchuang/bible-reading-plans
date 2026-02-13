@@ -118,7 +118,7 @@ function App() {
           <div className="flex-1 min-h-0 flex flex-row">
             <div className={journalOpen ? 'w-1/2 min-w-0 h-full' : 'w-full h-full'}>
               <BibleReader
-                reading={activeReading}
+                selection={activeReading}
                 translation={state.translation}
                 displayMode={state.displayMode}
                 onDisplayModeChange={state.setDisplayMode}
@@ -132,7 +132,7 @@ function App() {
             {journalOpen && (
               <div className="w-1/2 min-w-0 h-full border-l border-gray-200 dark:border-gray-700">
                 <JournalPane
-                  reading={activeReading}
+                  selection={activeReading}
                   fontFamily={state.fontFamily}
                   fontSize={state.fontSize}
                 />
