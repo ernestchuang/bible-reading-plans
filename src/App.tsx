@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useReadingPlan } from './hooks/useReadingPlan';
 import { useBiblePreferences } from './hooks/useBiblePreferences';
 import { getReadingsForDay, generatePlan } from './utils/planGenerator';
@@ -16,7 +17,6 @@ import { clearCache } from './utils/bibleCache';
 function App() {
   const state = useReadingPlan();
   const prefs = useBiblePreferences();
-  const [activeTab, setActiveTab] = useState('Today');
   const [activeReading, setActiveReading] = useState<Reading | null>(null);
   const [journalOpen, setJournalOpen] = useState(false);
 
@@ -84,13 +84,9 @@ function App() {
     state.setActivePlanId(planId);
   }
 
-  const showReader = activeTab === 'Today';
-
   return (
     <div className="h-screen flex flex-col overflow-hidden dark:bg-gray-900">
       <Header
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
         translation={prefs.translation}
         onTranslationChange={prefs.setTranslation}
         activePlanId={state.activePlanId}
@@ -99,56 +95,62 @@ function App() {
         onThemeChange={prefs.setTheme}
       />
 
-      {showReader ? (
-        <>
-          {/* Compact reading plan bar */}
-          <div className="shrink-0 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-            <div className="max-w-[1600px] mx-auto">
-              <DailyView
-                readings={todayReadings}
-                startDate={state.startDate}
-                currentDayIndex={state.currentDayIndex}
-                activeReading={activeReading}
-                completedToday={state.completedToday}
-                onSelectReading={setActiveReading}
-                onToggleComplete={handleToggleComplete}
-              />
-            </div>
-          </div>
-
-          {/* Bible text reader + journal - fills remaining space */}
-          <div className="flex-1 min-h-0 flex flex-row">
-            <div className={journalOpen ? 'w-1/2 min-w-0 h-full' : 'w-full h-full'}>
-              <BibleReader
-                selection={activeReading}
-                translation={prefs.translation}
-                displayMode={prefs.displayMode}
-                onDisplayModeChange={prefs.setDisplayMode}
-                fontFamily={prefs.fontFamily}
-                fontSize={prefs.fontSize}
-                onFontSizeChange={prefs.setFontSize}
-                onToggleJournal={() => setJournalOpen((p) => !p)}
-                journalOpen={journalOpen}
-              />
-            </div>
-            {journalOpen && (
-              <div className="w-1/2 min-w-0 h-full border-l border-gray-200 dark:border-gray-700">
-                <JournalPane
-                  selection={activeReading}
-                  fontFamily={prefs.fontFamily}
-                  fontSize={prefs.fontSize}
+      <Routes>
+        <Route path="/" element={<Navigate to="/today" replace />} />
+        <Route path="/today" element={
+          <>
+            {/* Compact reading plan bar */}
+            <div className="shrink-0 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+              <div className="max-w-[1600px] mx-auto">
+                <DailyView
+                  readings={todayReadings}
+                  startDate={state.startDate}
+                  currentDayIndex={state.currentDayIndex}
+                  activeReading={activeReading}
+                  completedToday={state.completedToday}
+                  onSelectReading={setActiveReading}
+                  onToggleComplete={handleToggleComplete}
                 />
               </div>
-            )}
-          </div>
-        </>
-      ) : (
-        <main className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {activeTab === 'Full Plan' && (
+            </div>
+
+            {/* Bible text reader + journal - fills remaining space */}
+            <div className="flex-1 min-h-0 flex flex-row">
+              <div className={journalOpen ? 'w-1/2 min-w-0 h-full' : 'w-full h-full'}>
+                <BibleReader
+                  selection={activeReading}
+                  translation={prefs.translation}
+                  displayMode={prefs.displayMode}
+                  onDisplayModeChange={prefs.setDisplayMode}
+                  fontFamily={prefs.fontFamily}
+                  fontSize={prefs.fontSize}
+                  onFontSizeChange={prefs.setFontSize}
+                  onToggleJournal={() => setJournalOpen((p) => !p)}
+                  journalOpen={journalOpen}
+                />
+              </div>
+              {journalOpen && (
+                <div className="w-1/2 min-w-0 h-full border-l border-gray-200 dark:border-gray-700">
+                  <JournalPane
+                    selection={activeReading}
+                    fontFamily={prefs.fontFamily}
+                    fontSize={prefs.fontSize}
+                  />
+                </div>
+              )}
+            </div>
+          </>
+        } />
+        <Route path="/plan" element={
+          <main className="flex-1 overflow-y-auto">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               <PlanView plan={fullPlan} />
-            )}
-            {activeTab === 'Settings' && (
+            </div>
+          </main>
+        } />
+        <Route path="/settings" element={
+          <main className="flex-1 overflow-y-auto">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               <SettingsPanel
                 lists={isCyclingPlan(plan) ? plan.lists : []}
                 isCalendarPlan={isCalendarPlan(plan)}
@@ -169,10 +171,10 @@ function App() {
                 resetPreferences={prefs.resetPreferences}
                 onClearCache={clearCache}
               />
-            )}
-          </div>
-        </main>
-      )}
+            </div>
+          </main>
+        } />
+      </Routes>
     </div>
   );
 }
