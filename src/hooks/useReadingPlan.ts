@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import type { Translation, ReadingPlan, DisplayMode, Theme, FontFamily, FontSize } from '../types';
+import type { ReadingPlan } from '../types';
 import { isCalendarPlan, getListCount } from '../types';
 import { PLANS, DEFAULT_PLAN_ID, getPlanById } from '../data/plans';
 
@@ -18,11 +18,6 @@ interface PerPlanState {
 interface StoredState {
   activePlanId: string;
   plans: Record<string, PerPlanState>;
-  translation: Translation;
-  displayMode: DisplayMode;
-  theme: Theme;
-  fontFamily: FontFamily;
-  fontSize: FontSize;
   daysToGenerate: number;
 }
 
@@ -35,22 +30,12 @@ export interface ReadingPlanState {
   listOffsets: number[];
   setListOffsets: (offsets: number[]) => void;
   setListOffset: (listIndex: number, offset: number) => void;
-  translation: Translation;
-  setTranslation: (t: Translation) => void;
-  displayMode: DisplayMode;
-  setDisplayMode: (mode: DisplayMode) => void;
-  theme: Theme;
-  setTheme: (t: Theme) => void;
-  fontFamily: FontFamily;
-  setFontFamily: (f: FontFamily) => void;
-  fontSize: FontSize;
-  setFontSize: (s: FontSize) => void;
   daysToGenerate: number;
   setDaysToGenerate: (n: number) => void;
   currentDayIndex: number;
   completedToday: boolean[];
   toggleReading: (listIndex: number) => void;
-  resetAll: () => void;
+  resetPlan: () => void;
 }
 
 function getToday(): string {
@@ -77,11 +62,6 @@ function getDefaults(): StoredState {
   return {
     activePlanId: DEFAULT_PLAN_ID,
     plans,
-    translation: 'NASB95',
-    displayMode: 'verse' as DisplayMode,
-    theme: 'system' as Theme,
-    fontFamily: 'system' as FontFamily,
-    fontSize: 16 as FontSize,
     daysToGenerate: 30,
   };
 }
@@ -95,7 +75,6 @@ function migrateLegacy(): StoredState | null {
     const legacy = JSON.parse(raw) as {
       startDate?: string;
       listOffsets?: number[];
-      translation?: Translation;
       daysToGenerate?: number;
       completedToday?: { date: string; lists: boolean[] };
     };
@@ -119,11 +98,6 @@ function migrateLegacy(): StoredState | null {
           completedToday: completed,
         },
       },
-      translation: legacy.translation ?? defaults.translation,
-      displayMode: defaults.displayMode,
-      theme: defaults.theme,
-      fontFamily: defaults.fontFamily,
-      fontSize: defaults.fontSize,
       daysToGenerate: legacy.daysToGenerate ?? defaults.daysToGenerate,
     };
 
@@ -170,11 +144,6 @@ function loadFromStorage(): StoredState {
       return {
         activePlanId: parsed.activePlanId ?? defaults.activePlanId,
         plans,
-        translation: parsed.translation ?? defaults.translation,
-        displayMode: parsed.displayMode ?? defaults.displayMode,
-        theme: parsed.theme ?? defaults.theme,
-        fontFamily: (parsed as Record<string, unknown>).fontFamily as FontFamily ?? defaults.fontFamily,
-        fontSize: (parsed as Record<string, unknown>).fontSize as FontSize ?? defaults.fontSize,
         daysToGenerate: parsed.daysToGenerate ?? defaults.daysToGenerate,
       };
     }
@@ -273,26 +242,6 @@ export function useReadingPlan(): ReadingPlanState {
     });
   }
 
-  function setTranslation(t: Translation) {
-    setStored((prev) => ({ ...prev, translation: t }));
-  }
-
-  function setDisplayMode(mode: DisplayMode) {
-    setStored((prev) => ({ ...prev, displayMode: mode }));
-  }
-
-  function setTheme(t: Theme) {
-    setStored((prev) => ({ ...prev, theme: t }));
-  }
-
-  function setFontFamily(f: FontFamily) {
-    setStored((prev) => ({ ...prev, fontFamily: f }));
-  }
-
-  function setFontSize(s: FontSize) {
-    setStored((prev) => ({ ...prev, fontSize: s }));
-  }
-
   function setDaysToGenerate(n: number) {
     setStored((prev) => ({ ...prev, daysToGenerate: n }));
   }
@@ -347,7 +296,7 @@ export function useReadingPlan(): ReadingPlanState {
     [activePlan]
   );
 
-  function resetAll() {
+  function resetPlan() {
     const defaults = getDefaults();
     setStored((prev) => ({
       ...prev,
@@ -355,11 +304,6 @@ export function useReadingPlan(): ReadingPlanState {
         ...prev.plans,
         [activePlan.id]: defaults.plans[activePlan.id],
       },
-      translation: defaults.translation,
-      displayMode: defaults.displayMode,
-      theme: defaults.theme,
-      fontFamily: defaults.fontFamily,
-      fontSize: defaults.fontSize,
       daysToGenerate: defaults.daysToGenerate,
     }));
   }
@@ -373,21 +317,11 @@ export function useReadingPlan(): ReadingPlanState {
     listOffsets: planState.listOffsets,
     setListOffsets,
     setListOffset,
-    translation: stored.translation,
-    setTranslation,
-    displayMode: stored.displayMode,
-    setDisplayMode,
-    theme: stored.theme,
-    setTheme,
-    fontFamily: stored.fontFamily,
-    setFontFamily,
-    fontSize: stored.fontSize,
-    setFontSize,
     daysToGenerate: stored.daysToGenerate,
     setDaysToGenerate,
     currentDayIndex,
     completedToday: planState.completedToday.lists,
     toggleReading,
-    resetAll,
+    resetPlan,
   };
 }
