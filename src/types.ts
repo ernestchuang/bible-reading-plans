@@ -11,10 +11,8 @@ export interface ReadingList {
   totalChapters: number;
 }
 
-export interface Reading {
-  listId: number;
-  listName: string;
-  listColor: string;
+/** A plan-agnostic Bible text selection: book + chapter + optional range. */
+export interface BibleSelection {
   book: string;
   chapter: number;
   endChapter?: number;   // for multi-chapter ranges like "Genesis 9-10"
@@ -22,16 +20,25 @@ export interface Reading {
   endVerse?: number;     // for sub-chapter ranges like "Luke 1:1-38"
 }
 
-/** Format a Reading as human-readable text, e.g. "Genesis 9-10" or "Luke 1:1-38" */
-export function formatReading(r: Reading): string {
-  if (r.startVerse != null && r.endVerse != null) {
-    return `${r.book} ${r.chapter}:${r.startVerse}-${r.endVerse}`;
-  }
-  if (r.endChapter != null && r.endChapter !== r.chapter) {
-    return `${r.book} ${r.chapter}-${r.endChapter}`;
-  }
-  return `${r.book} ${r.chapter}`;
+export interface Reading extends BibleSelection {
+  listId: number;
+  listName: string;
+  listColor: string;
 }
+
+/** Format a BibleSelection as human-readable text, e.g. "Genesis 9-10" or "Luke 1:1-38" */
+export function formatBibleSelection(s: BibleSelection): string {
+  if (s.startVerse != null && s.endVerse != null) {
+    return `${s.book} ${s.chapter}:${s.startVerse}-${s.endVerse}`;
+  }
+  if (s.endChapter != null && s.endChapter !== s.chapter) {
+    return `${s.book} ${s.chapter}-${s.endChapter}`;
+  }
+  return `${s.book} ${s.chapter}`;
+}
+
+/** @deprecated Use formatBibleSelection instead */
+export const formatReading = formatBibleSelection;
 
 export interface DayPlan {
   day: number;

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { Reading, Translation, Verse, DisplayMode, FontFamily, FontSize } from '../types';
-import { formatReading } from '../types';
+import type { BibleSelection, Translation, Verse, DisplayMode, FontFamily, FontSize } from '../types';
+import { formatBibleSelection } from '../types';
 import { fetchChapterCached } from '../utils/bibleCache';
 import { getFontCss, FONT_SIZES } from '../data/fonts';
 
@@ -11,7 +11,7 @@ interface ChapterBlock {
 }
 
 interface BibleReaderProps {
-  reading: Reading | null;
+  selection: BibleSelection | null;
   translation: Translation;
   displayMode: DisplayMode;
   onDisplayModeChange: (mode: DisplayMode) => void;
@@ -163,7 +163,7 @@ function ReaderView({ verses }: { verses: Verse[] }) {
   );
 }
 
-export function BibleReader({ reading, translation, displayMode, onDisplayModeChange, fontFamily, fontSize, onFontSizeChange, onToggleJournal, journalOpen }: BibleReaderProps) {
+export function BibleReader({ selection, translation, displayMode, onDisplayModeChange, fontFamily, fontSize, onFontSizeChange, onToggleJournal, journalOpen }: BibleReaderProps) {
   const [blocks, setBlocks] = useState<ChapterBlock[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -176,25 +176,25 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
     lineHeight: `${fontSize + 8}px`,
   };
 
-  const loadReading = useCallback(async (r: Reading, trans: Translation) => {
+  const loadSelection = useCallback(async (s: BibleSelection, trans: Translation) => {
     setLoading(true);
     setError(null);
     try {
-      const startCh = r.chapter;
-      const endCh = r.endChapter ?? r.chapter;
+      const startCh = s.chapter;
+      const endCh = s.endChapter ?? s.chapter;
       const newBlocks: ChapterBlock[] = [];
 
       for (let ch = startCh; ch <= endCh; ch++) {
-        let verses = await fetchChapterCached(r.book, ch, trans);
+        let verses = await fetchChapterCached(s.book, ch, trans);
 
         // Filter verses for sub-chapter ranges (single-chapter readings only)
-        if (r.startVerse != null && r.endVerse != null && startCh === endCh) {
+        if (s.startVerse != null && s.endVerse != null && startCh === endCh) {
           verses = verses.filter(
-            (v) => v.verse >= r.startVerse! && v.verse <= r.endVerse!
+            (v) => v.verse >= s.startVerse! && v.verse <= s.endVerse!
           );
         }
 
-        newBlocks.push({ book: r.book, chapter: ch, verses });
+        newBlocks.push({ book: s.book, chapter: ch, verses });
       }
 
       setBlocks(newBlocks);
@@ -206,31 +206,31 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
     }
   }, []);
 
-  // Stable key for reading identity
-  const readingKey = reading
-    ? `${reading.book}|${reading.chapter}|${reading.endChapter ?? ''}|${reading.startVerse ?? ''}|${reading.endVerse ?? ''}`
+  // Stable key for selection identity
+  const selectionKey = selection
+    ? `${selection.book}|${selection.chapter}|${selection.endChapter ?? ''}|${selection.startVerse ?? ''}|${selection.endVerse ?? ''}`
     : null;
 
   useEffect(() => {
-    if (!reading) {
+    if (!selection) {
       setBlocks([]);
       setError(null);
       return;
     }
-    loadReading(reading, translation);
+    loadSelection(selection, translation);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readingKey, translation, loadReading]);
+  }, [selectionKey, translation, loadSelection]);
 
-  // Reset scroll when reading changes
+  // Reset scroll when selection changes
   useEffect(() => {
     scrollRef.current?.scrollTo(0, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readingKey, translation]);
+  }, [selectionKey, translation]);
 
-  if (!reading) {
+  if (!selection) {
     return (
       <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-900 text-gray-400 dark:text-gray-500">
-        <p className="text-lg">Select a reading above to begin</p>
+        <p className="text-lg">Select a chapter to begin reading</p>
       </div>
     );
   }
@@ -240,7 +240,7 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
       {/* Reader toolbar */}
       <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {formatReading(reading)}
+          {formatBibleSelection(selection)}
           <span className="text-gray-400 dark:text-gray-500 ml-2">({translation})</span>
         </span>
         <div className="flex items-center gap-2">
@@ -269,7 +269,7 @@ export function BibleReader({ reading, translation, displayMode, onDisplayModeCh
           <div className="flex flex-col items-center justify-center h-full gap-3">
             <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
             <button
-              onClick={() => loadReading(reading, translation)}
+              onClick={() => loadSelection(selection, translation)}
               className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
             >
               Retry

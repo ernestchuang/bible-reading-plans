@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Reading, FontFamily, FontSize } from '../../types';
-import { formatReading } from '../../types';
+import type { BibleSelection, FontFamily, FontSize } from '../../types';
+import { formatBibleSelection } from '../../types';
 import type { JournalViewMode } from '../../types/journal';
 import { useJournal } from '../../hooks/useJournal';
 import { JournalEditor } from './JournalEditor';
@@ -8,14 +8,14 @@ import { JournalEntryCard } from './JournalEntryCard';
 import { JournalDateView } from './JournalDateView';
 
 interface JournalPaneProps {
-  reading: Reading | null;
+  selection: BibleSelection | null;
   fontFamily: FontFamily;
   fontSize: FontSize;
 }
 
-export function JournalPane({ reading, fontFamily, fontSize }: JournalPaneProps) {
-  const book = reading?.book ?? null;
-  const chapter = reading?.chapter ?? null;
+export function JournalPane({ selection, fontFamily, fontSize }: JournalPaneProps) {
+  const book = selection?.book ?? null;
+  const chapter = selection?.chapter ?? null;
   const {
     entries,
     allEntries,
@@ -28,10 +28,10 @@ export function JournalPane({ reading, fontFamily, fontSize }: JournalPaneProps)
   const [composing, setComposing] = useState(false);
   const [linkedTo, setLinkedTo] = useState<string | undefined>(undefined);
 
-  if (!reading) {
+  if (!selection) {
     return (
       <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-500">
-        <p className="text-sm">Select a reading to view journal entries</p>
+        <p className="text-sm">Select a chapter to view journal entries</p>
       </div>
     );
   }
@@ -67,7 +67,7 @@ export function JournalPane({ reading, fontFamily, fontSize }: JournalPaneProps)
       <div className="flex flex-col h-full bg-white dark:bg-gray-900">
         <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {reading ? formatReading(reading) : `${book} ${chapter}`} — New Entry
+            {formatBibleSelection(selection)} — New Entry
           </span>
         </div>
         <div className="flex-1 min-h-0">
@@ -88,7 +88,7 @@ export function JournalPane({ reading, fontFamily, fontSize }: JournalPaneProps)
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {reading ? formatReading(reading) : `${book} ${chapter}`} — Journal
+          {formatBibleSelection(selection)} — Journal
         </span>
         <div className="flex items-center gap-1">
           <ViewToggle viewMode={viewMode} onChange={setViewMode} />
@@ -104,7 +104,7 @@ export function JournalPane({ reading, fontFamily, fontSize }: JournalPaneProps)
             </div>
           ) : entries.length === 0 ? (
             <div className="flex items-center justify-center py-8 text-gray-400 dark:text-gray-500 text-sm">
-              No entries for {reading ? formatReading(reading) : `${book} ${chapter}`} yet.
+              No entries for {formatBibleSelection(selection)} yet.
             </div>
           ) : (
             <div className="space-y-3">
