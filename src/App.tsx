@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useReadingPlan } from './hooks/useReadingPlan';
 import { useBiblePreferences } from './hooks/useBiblePreferences';
 import { getReadingsForDay, generatePlan } from './utils/planGenerator';
@@ -15,11 +15,30 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { JournalPane } from './components/journal/JournalPane';
 import { clearCache } from './utils/bibleCache';
 
+const LAST_ROUTE_KEY = 'last-route-v1';
+const VALID_ROUTES = ['/read', '/plans', '/plan', '/settings'];
+
+function getLastRoute(): string {
+  try {
+    const saved = localStorage.getItem(LAST_ROUTE_KEY);
+    if (saved && VALID_ROUTES.includes(saved)) return saved;
+  } catch { /* ignore */ }
+  return '/read';
+}
+
 function App() {
   const state = useReadingPlan();
   const prefs = useBiblePreferences();
+  const location = useLocation();
   const [activeReading, setActiveReading] = useState<Reading | null>(null);
   const [journalOpen, setJournalOpen] = useState(false);
+
+  // Persist current route to localStorage
+  useEffect(() => {
+    if (VALID_ROUTES.includes(location.pathname)) {
+      localStorage.setItem(LAST_ROUTE_KEY, location.pathname);
+    }
+  }, [location.pathname]);
 
   // Sync theme classes on <html>
   useEffect(() => {
@@ -97,7 +116,7 @@ function App() {
       />
 
       <Routes>
-        <Route path="/" element={<Navigate to="/read" replace />} />
+        <Route path="/" element={<Navigate to={getLastRoute()} replace />} />
         <Route path="/read" element={<ReadView prefs={prefs} />} />
         <Route path="/plans" element={
           <>
