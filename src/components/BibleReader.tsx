@@ -1,15 +1,118 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { Reading, Translation, Verse } from '../types';
+import type { Reading, Translation, Verse, DisplayMode } from '../types';
 import { fetchChapter } from '../utils/bibleApi';
 
 interface BibleReaderProps {
   reading: Reading | null;
   translation: Translation;
+  displayMode: DisplayMode;
+  onDisplayModeChange: (mode: DisplayMode) => void;
   onToggleJournal: () => void;
   journalOpen: boolean;
 }
 
-export function BibleReader({ reading, translation, onToggleJournal, journalOpen }: BibleReaderProps) {
+/** Separate any leading section heading from the verse body text. */
+function parseVerseText(html: string): { heading: string | null; body: string } {
+  const match = html.match(/^<b>(.+?)<\/b>(?:<br\/?>)?\s*(.*)$/s);
+  if (match) {
+    return { heading: match[1], body: match[2] };
+  }
+  return { heading: null, body: html };
+}
+
+const DISPLAY_MODES: { value: DisplayMode; label: string; title: string }[] = [
+  { value: 'verse', label: 'Aa', title: 'Verse-by-verse' },
+  { value: 'paragraph', label: '\u00b6', title: 'Paragraph' },
+  { value: 'reader', label: '\u2261', title: "Reader's layout" },
+];
+
+function DisplayModeToggle({ mode, onChange }: { mode: DisplayMode; onChange: (m: DisplayMode) => void }) {
+  return (
+    <div className="flex rounded-md border border-gray-300 overflow-hidden" role="radiogroup" aria-label="Display mode">
+      {DISPLAY_MODES.map(({ value, label, title }, i) => (
+        <button
+          key={value}
+          type="button"
+          role="radio"
+          aria-checked={mode === value}
+          title={title}
+          onClick={() => onChange(value)}
+          className={`px-2 py-1 text-xs font-medium transition-colors ${
+            mode === value
+              ? 'bg-indigo-100 text-indigo-700'
+              : 'bg-white text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+          } ${i > 0 ? 'border-l border-gray-300' : ''}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function VerseByVerseView({ verses }: { verses: Verse[] }) {
+  return (
+    <div className="text-base leading-7 text-gray-800 space-y-1">
+      {verses.map((v) => {
+        const { heading, body } = parseVerseText(v.text);
+        return (
+          <div key={v.pk}>
+            {heading && (
+              <h3 className="text-lg font-bold text-gray-900 mt-6 mb-2">{heading}</h3>
+            )}
+            <p>
+              <sup className="text-xs font-semibold text-gray-400 mr-1 select-none">
+                {v.verse}
+              </sup>
+              <span dangerouslySetInnerHTML={{ __html: body }} />
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ParagraphView({ verses }: { verses: Verse[] }) {
+  return (
+    <div className="text-base leading-7 text-gray-800">
+      {verses.map((v) => {
+        const { heading, body } = parseVerseText(v.text);
+        return (
+          <span key={v.pk}>
+            {heading && (
+              <span className="block text-lg font-bold text-gray-900 mt-6 mb-2">{heading}</span>
+            )}
+            <sup className="text-xs font-semibold text-gray-400 mr-0.5 select-none">
+              {v.verse}
+            </sup>
+            <span dangerouslySetInnerHTML={{ __html: body }} />
+            {' '}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function ReaderView({ verses }: { verses: Verse[] }) {
+  return (
+    <div className="text-base leading-8 text-gray-800">
+      {verses.map((v) => {
+        const { body } = parseVerseText(v.text);
+        const cleanBody = body.replace(/<\/?b>/g, '');
+        return (
+          <span key={v.pk}>
+            <span dangerouslySetInnerHTML={{ __html: cleanBody }} />
+            {' '}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+export function BibleReader({ reading, translation, displayMode, onDisplayModeChange, onToggleJournal, journalOpen }: BibleReaderProps) {
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,12 +162,16 @@ export function BibleReader({ reading, translation, onToggleJournal, journalOpen
           {reading.book} {reading.chapter}
           <span className="text-gray-400 ml-2">({translation})</span>
         </span>
-        <button
-          onClick={onToggleJournal}
-          className="text-xs text-indigo-600 hover:text-indigo-800 transition-colors"
-        >
-          {journalOpen ? 'Close Journal' : 'Journal'}
-        </button>
+        <div className="flex items-center gap-2">
+          <DisplayModeToggle mode={displayMode} onChange={onDisplayModeChange} />
+          <span className="h-4 w-px bg-gray-300" />
+          <button
+            onClick={onToggleJournal}
+            className="text-xs text-indigo-600 hover:text-indigo-800 transition-colors"
+          >
+            {journalOpen ? 'Close Journal' : 'Journal'}
+          </button>
+        </div>
       </div>
 
       {/* Chapter content */}
@@ -92,17 +199,9 @@ export function BibleReader({ reading, translation, onToggleJournal, journalOpen
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
               {reading.book} {reading.chapter}
             </h2>
-            <div className="text-base leading-7 text-gray-800">
-              {verses.map((v) => (
-                <span key={v.pk}>
-                  <sup className="text-xs font-semibold text-gray-400 mr-1 select-none">
-                    {v.verse}
-                  </sup>
-                  <span dangerouslySetInnerHTML={{ __html: v.text }} />
-                  {' '}
-                </span>
-              ))}
-            </div>
+            {displayMode === 'verse' && <VerseByVerseView verses={verses} />}
+            {displayMode === 'paragraph' && <ParagraphView verses={verses} />}
+            {displayMode === 'reader' && <ReaderView verses={verses} />}
           </div>
         )}
       </div>

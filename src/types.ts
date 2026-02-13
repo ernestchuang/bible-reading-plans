@@ -39,3 +39,5 @@ export interface Verse {
 }
 
 export type Translation = 'NASB95' | 'LSB' | 'ESV' | 'KJV';
+
+export type DisplayMode = 'verse' | 'paragraph' | 'reader';

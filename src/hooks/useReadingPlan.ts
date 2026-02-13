@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import type { Translation, ReadingPlan } from '../types';
+import type { Translation, ReadingPlan, DisplayMode } from '../types';
 import { PLANS, DEFAULT_PLAN_ID, getPlanById } from '../data/plans';
 
 const STORAGE_KEY = 'bible-reading-plan-v2';
@@ -18,6 +18,7 @@ interface StoredState {
   activePlanId: string;
   plans: Record<string, PerPlanState>;
   translation: Translation;
+  displayMode: DisplayMode;
   daysToGenerate: number;
 }
 
@@ -32,6 +33,8 @@ export interface ReadingPlanState {
   setListOffset: (listIndex: number, offset: number) => void;
   translation: Translation;
   setTranslation: (t: Translation) => void;
+  displayMode: DisplayMode;
+  setDisplayMode: (mode: DisplayMode) => void;
   daysToGenerate: number;
   setDaysToGenerate: (n: number) => void;
   currentDayIndex: number;
@@ -64,6 +67,7 @@ function getDefaults(): StoredState {
     activePlanId: DEFAULT_PLAN_ID,
     plans,
     translation: 'NASB95',
+    displayMode: 'verse' as DisplayMode,
     daysToGenerate: 30,
   };
 }
@@ -102,6 +106,7 @@ function migrateLegacy(): StoredState | null {
         },
       },
       translation: legacy.translation ?? defaults.translation,
+      displayMode: defaults.displayMode,
       daysToGenerate: legacy.daysToGenerate ?? defaults.daysToGenerate,
     };
 
@@ -149,6 +154,7 @@ function loadFromStorage(): StoredState {
         activePlanId: parsed.activePlanId ?? defaults.activePlanId,
         plans,
         translation: parsed.translation ?? defaults.translation,
+        displayMode: parsed.displayMode ?? defaults.displayMode,
         daysToGenerate: parsed.daysToGenerate ?? defaults.daysToGenerate,
       };
     }
@@ -250,6 +256,10 @@ export function useReadingPlan(): ReadingPlanState {
     setStored((prev) => ({ ...prev, translation: t }));
   }
 
+  function setDisplayMode(mode: DisplayMode) {
+    setStored((prev) => ({ ...prev, displayMode: mode }));
+  }
+
   function setDaysToGenerate(n: number) {
     setStored((prev) => ({ ...prev, daysToGenerate: n }));
   }
@@ -299,6 +309,7 @@ export function useReadingPlan(): ReadingPlanState {
         [activePlan.id]: defaults.plans[activePlan.id],
       },
       translation: defaults.translation,
+      displayMode: defaults.displayMode,
       daysToGenerate: defaults.daysToGenerate,
     }));
   }
@@ -314,6 +325,8 @@ export function useReadingPlan(): ReadingPlanState {
     setListOffset,
     translation: stored.translation,
     setTranslation,
+    displayMode: stored.displayMode,
+    setDisplayMode,
     daysToGenerate: stored.daysToGenerate,
     setDaysToGenerate,
     currentDayIndex,

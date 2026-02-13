@@ -88,6 +88,8 @@ function App() {
               <BibleReader
                 reading={activeReading}
                 translation={state.translation}
+                displayMode={state.displayMode}
+                onDisplayModeChange={state.setDisplayMode}
                 onToggleJournal={() => setJournalOpen((p) => !p)}
                 journalOpen={journalOpen}
               />
