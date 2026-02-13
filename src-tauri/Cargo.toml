@@ -1,6 +1,6 @@
 [package]
 name = "bible-reading-plan"
-version = "0.9.1"
+version = "1.0.0-beta.1"
 edition = "2021"
 
 [lib]
