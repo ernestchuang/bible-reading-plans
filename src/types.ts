@@ -25,4 +25,11 @@ export interface DayPlan {
   readings: Reading[];
 }
 
+export interface ReadingPlan {
+  id: string;
+  name: string;
+  description: string;
+  lists: ReadingList[];
+}
+
 export type Translation = 'NASB95' | 'LSB' | 'ESV' | 'KJV';

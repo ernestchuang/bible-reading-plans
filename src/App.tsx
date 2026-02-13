@@ -15,12 +15,14 @@ function App() {
   const [activeReading, setActiveReading] = useState<Reading | null>(null);
   const [journalOpen, setJournalOpen] = useState(false);
 
+  const lists = state.activePlan.lists;
+
   // Today's readings are based on current listOffsets (position-based, not day-based).
   // Completed readings have already advanced the offset, so we need to show
   // the chapter BEFORE the offset for completed items, and AT the offset for incomplete.
   const todayReadings = useMemo(
-    () => getReadingsForDay(0, state.listOffsets),
-    [state.listOffsets]
+    () => getReadingsForDay(0, state.listOffsets, lists),
+    [state.listOffsets, lists]
   );
 
   // Full Plan projects forward from current positions
@@ -29,9 +31,10 @@ function App() {
       generatePlan(
         new Date(new Date().toISOString().split('T')[0] + 'T00:00:00'),
         state.daysToGenerate,
-        state.listOffsets
+        state.listOffsets,
+        lists
       ),
-    [state.daysToGenerate, state.listOffsets]
+    [state.daysToGenerate, state.listOffsets, lists]
   );
 
   function handleToggleComplete(listIndex: number) {
@@ -43,6 +46,12 @@ function App() {
     state.toggleReading(listIndex);
   }
 
+  // Clear active reading when switching plans (readings change)
+  function handlePlanChange(planId: string) {
+    setActiveReading(null);
+    state.setActivePlanId(planId);
+  }
+
   const showReader = activeTab === 'Today';
 
   return (
@@ -52,6 +61,8 @@ function App() {
         onTabChange={setActiveTab}
         translation={state.translation}
         onTranslationChange={state.setTranslation}
+        activePlanId={state.activePlanId}
+        onPlanChange={handlePlanChange}
       />
 
       {showReader ? (
@@ -96,6 +107,7 @@ function App() {
             )}
             {activeTab === 'Settings' && (
               <SettingsPanel
+                lists={lists}
                 startDate={state.startDate}
                 setStartDate={state.setStartDate}
                 listOffsets={state.listOffsets}

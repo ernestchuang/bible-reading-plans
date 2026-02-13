@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-02-12
+
+### Added
+
+- Multi-plan support: modular architecture for multiple Bible reading plans
+- M'Cheyne's Reading Plan (4 cycling lists covering the entire Bible)
+- Plan selector dropdown in the header to switch between plans
+- Per-plan state: each plan tracks its own start date, list offsets, and daily progress independently
+- Automatic migration from legacy single-plan localStorage format
+
+### Changed
+
+- Compact journal entry cards: past entries show first heading/line preview instead of full content
+- App icon redesigned with burgundy Bible, dark burgundy accents, gold pages, and purple ribbon
+
 ## [0.3.1] - 2026-02-12
 
 ### Added
@@ -56,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tauri desktop app for macOS and Linux
 - GitHub Actions release workflow
 
+[0.4.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.2.0...v0.2.1

@@ -11,6 +11,14 @@ interface DailyViewProps {
   onToggleComplete: (listIndex: number) => void;
 }
 
+const GRID_COLS: Record<number, string> = {
+  1: 'sm:grid-cols-1',
+  2: 'sm:grid-cols-2',
+  3: 'sm:grid-cols-3',
+  4: 'sm:grid-cols-4',
+  5: 'sm:grid-cols-5',
+};
+
 export function DailyView({
   readings,
   startDate,
@@ -30,6 +38,8 @@ export function DailyView({
   });
 
   const completedCount = completedToday.filter(Boolean).length;
+  const total = readings.length;
+  const colsClass = GRID_COLS[Math.min(total, 5)] ?? 'sm:grid-cols-5';
 
   return (
     <div className="space-y-3">
@@ -40,14 +50,14 @@ export function DailyView({
           <span className="text-gray-500 ml-2">{formattedDate}</span>
         </div>
         <div className="text-sm text-gray-500">
-          <span className={completedCount === 10 ? 'text-green-600 font-semibold' : ''}>
-            {completedCount}/10 complete
+          <span className={completedCount === total ? 'text-green-600 font-semibold' : ''}>
+            {completedCount}/{total} complete
           </span>
         </div>
       </div>
 
-      {/* Reading cards - 2 rows of 5 */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      {/* Reading cards */}
+      <div className={`grid grid-cols-2 ${colsClass} gap-2`}>
         {readings.map((reading, i) => (
           <ReadingCard
             key={reading.listId}

@@ -1,10 +1,11 @@
 # Bible Reading Plan
 
-A daily Bible reading app based on **Dr. Grant Horner's Bible Reading System** — 10 independent reading lists that cycle at different lengths, so you never read the same combination twice.
+A daily Bible reading app supporting multiple reading plans — including **Dr. Grant Horner's Bible Reading System** and **M'Cheyne's Reading Plan**. Each plan uses independent cycling lists, so you never read the same combination twice.
 
 ## Features
 
-- **10 color-coded reading lists** with check-off tracking
+- **Multiple reading plans** — switch between Horner's (10 lists) and M'Cheyne's (4 lists) via a header dropdown
+- **Color-coded reading lists** with check-off tracking
 - **Embedded Bible reader** — click a chapter to read it inline (NASB95, LSB, ESV, KJV)
 - **Carry-over system** — unchecked readings stay for the next day
 - **Progress tracking** — completion state resets daily, list positions persist
@@ -111,7 +112,9 @@ npm run tauri:build
    ```
 4. GitHub Actions automatically builds macOS and Linux binaries and creates a release
 
-## How the Horner System Works
+## Reading Plans
+
+### Horner's Bible Reading System
 
 You read **one chapter per day** from each of **10 lists**. When you finish a list, it loops back to the beginning. Since the lists range from 28 to 250 chapters, they naturally desynchronize — creating unique combinations for years.
 
@@ -127,3 +130,14 @@ You read **one chapter per day** from each of **10 lists**. When you finish a li
 | 8 | History | Joshua — Esther | 249 |
 | 9 | Prophets | Isaiah — Malachi | 250 |
 | 10 | Acts | Acts | 28 |
+
+### M'Cheyne's Reading Plan
+
+Adapted from Robert Murray M'Cheyne's calendar into **4 cycling lists** covering the entire Bible:
+
+| # | List | Books | Chapters |
+|---|------|-------|----------|
+| 1 | Family (AM) | Genesis — Deuteronomy | 187 |
+| 2 | Family (PM) | Joshua — Esther | 249 |
+| 3 | Poetry & Prophets | Job — Malachi | 493 |
+| 4 | New Testament | Matthew — Revelation | 260 |

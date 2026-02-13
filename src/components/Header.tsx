@@ -1,4 +1,5 @@
 import type { Translation } from '../types';
+import { PLANS } from '../data/plans';
 
 const TRANSLATIONS: Translation[] = ['NASB95', 'LSB', 'ESV', 'KJV'];
 const TABS = ['Today', 'Full Plan', 'Settings'] as const;
@@ -8,6 +9,8 @@ interface HeaderProps {
   onTabChange: (tab: string) => void;
   translation: Translation;
   onTranslationChange: (t: Translation) => void;
+  activePlanId: string;
+  onPlanChange: (planId: string) => void;
 }
 
 export function Header({
@@ -15,6 +18,8 @@ export function Header({
   onTabChange,
   translation,
   onTranslationChange,
+  activePlanId,
+  onPlanChange,
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-10 bg-white shadow">
@@ -25,25 +30,47 @@ export function Header({
             Bible Reading Plan
           </h1>
 
-          {/* Translation selector */}
-          <div className="hidden sm:flex items-center gap-2">
-            <label htmlFor="header-translation" className="text-sm text-gray-500">
-              Translation:
-            </label>
-            <select
-              id="header-translation"
-              value={translation}
-              onChange={(e) =>
-                onTranslationChange(e.target.value as Translation)
-              }
-              className="rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            >
-              {TRANSLATIONS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+          {/* Plan & translation selectors */}
+          <div className="hidden sm:flex items-center gap-4">
+            {/* Plan selector */}
+            <div className="flex items-center gap-2">
+              <label htmlFor="header-plan" className="text-sm text-gray-500">
+                Plan:
+              </label>
+              <select
+                id="header-plan"
+                value={activePlanId}
+                onChange={(e) => onPlanChange(e.target.value)}
+                className="rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              >
+                {PLANS.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Translation selector */}
+            <div className="flex items-center gap-2">
+              <label htmlFor="header-translation" className="text-sm text-gray-500">
+                Translation:
+              </label>
+              <select
+                id="header-translation"
+                value={translation}
+                onChange={(e) =>
+                  onTranslationChange(e.target.value as Translation)
+                }
+                className="rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              >
+                {TRANSLATIONS.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 

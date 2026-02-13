@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import type { Translation } from '../types';
-import { HORNER_LISTS } from '../data/hornerLists';
+import type { ReadingList, Translation } from '../types';
 
 interface SettingsPanelProps {
+  lists: ReadingList[];
   startDate: string;
   setStartDate: (date: string) => void;
   listOffsets: number[];
@@ -16,10 +16,9 @@ interface SettingsPanelProps {
 
 /** Convert a flat offset (0-based) into a { bookIndex, chapter } for a given list. */
 function offsetToBookChapter(
-  listIndex: number,
+  list: ReadingList,
   offset: number
 ): { bookIndex: number; chapter: number } {
-  const list = HORNER_LISTS[listIndex];
   const wrapped = ((offset % list.totalChapters) + list.totalChapters) % list.totalChapters;
   let cumulative = 0;
   for (let i = 0; i < list.books.length; i++) {
@@ -33,8 +32,7 @@ function offsetToBookChapter(
 }
 
 /** Convert a bookIndex + chapter (1-based) into a flat offset for a given list. */
-function bookChapterToOffset(listIndex: number, bookIndex: number, chapter: number): number {
-  const list = HORNER_LISTS[listIndex];
+function bookChapterToOffset(list: ReadingList, bookIndex: number, chapter: number): number {
   let offset = 0;
   for (let i = 0; i < bookIndex; i++) {
     offset += list.books[i].chapters;
@@ -50,6 +48,7 @@ const inputClasses =
 const labelClasses = 'block text-sm font-medium text-gray-700 mb-1';
 
 export function SettingsPanel({
+  lists,
   startDate,
   setStartDate,
   listOffsets,
@@ -63,19 +62,19 @@ export function SettingsPanel({
   // Pre-compute book/chapter for each list from offsets
   const listPositions = useMemo(
     () =>
-      HORNER_LISTS.map((_, i) => offsetToBookChapter(i, listOffsets[i])),
-    [listOffsets]
+      lists.map((list, i) => offsetToBookChapter(list, listOffsets[i])),
+    [lists, listOffsets]
   );
 
   function handleBookChange(listIndex: number, bookIndex: number) {
-    const offset = bookChapterToOffset(listIndex, bookIndex, 1);
+    const offset = bookChapterToOffset(lists[listIndex], bookIndex, 1);
     setListOffset(listIndex, offset);
   }
 
   function handleChapterChange(listIndex: number, bookIndex: number, chapter: number) {
-    const maxChapters = HORNER_LISTS[listIndex].books[bookIndex].chapters;
+    const maxChapters = lists[listIndex].books[bookIndex].chapters;
     const clamped = Math.max(1, Math.min(chapter, maxChapters));
-    const offset = bookChapterToOffset(listIndex, bookIndex, clamped);
+    const offset = bookChapterToOffset(lists[listIndex], bookIndex, clamped);
     setListOffset(listIndex, offset);
   }
 
@@ -146,7 +145,7 @@ export function SettingsPanel({
         </p>
 
         <div className="space-y-4">
-          {HORNER_LISTS.map((list, listIndex) => {
+          {lists.map((list, listIndex) => {
             const pos = listPositions[listIndex];
             const currentBook = list.books[pos.bookIndex];
 

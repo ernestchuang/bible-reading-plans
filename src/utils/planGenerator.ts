@@ -1,13 +1,11 @@
-import { HORNER_LISTS } from '../data/hornerLists';
-import type { Reading, DayPlan } from '../types';
+import type { ReadingList, Reading, DayPlan } from '../types';
 
 // Given a 0-based position offset into a list's total chapters,
 // determine which book and chapter it maps to
 function getChapterAtPosition(
-  listIndex: number,
+  list: ReadingList,
   position: number
 ): { book: string; chapter: number } {
-  const list = HORNER_LISTS[listIndex];
   const wrappedPos = position % list.totalChapters;
   let cumulative = 0;
   for (const book of list.books) {
@@ -21,15 +19,17 @@ function getChapterAtPosition(
   return { book: lastBook.name, chapter: lastBook.chapters };
 }
 
-// Get all 10 readings for a given day (0-indexed day number)
-// listOffsets: array of 10 numbers, each being the starting offset for that list
+// Get readings for a given day (0-indexed day number)
+// listOffsets: array of N numbers, each being the starting offset for that list
+// lists: the reading lists for the active plan
 export function getReadingsForDay(
   dayIndex: number,
-  listOffsets: number[]
+  listOffsets: number[],
+  lists: ReadingList[]
 ): Reading[] {
-  return HORNER_LISTS.map((list, i) => {
+  return lists.map((list, i) => {
     const position = (listOffsets[i] + dayIndex) % list.totalChapters;
-    const { book, chapter } = getChapterAtPosition(i, position);
+    const { book, chapter } = getChapterAtPosition(list, position);
     return {
       listId: list.id,
       listName: list.name,
@@ -44,7 +44,8 @@ export function getReadingsForDay(
 export function generatePlan(
   startDate: Date,
   days: number,
-  listOffsets: number[]
+  listOffsets: number[],
+  lists: ReadingList[]
 ): DayPlan[] {
   const plans: DayPlan[] = [];
   for (let d = 0; d < days; d++) {
@@ -53,7 +54,7 @@ export function generatePlan(
     plans.push({
       day: d + 1,
       date,
-      readings: getReadingsForDay(d, listOffsets),
+      readings: getReadingsForDay(d, listOffsets, lists),
     });
   }
   return plans;

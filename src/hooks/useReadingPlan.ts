@@ -1,21 +1,30 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import type { Translation } from '../types';
-import { HORNER_LISTS } from '../data/hornerLists';
+import type { Translation, ReadingPlan } from '../types';
+import { PLANS, DEFAULT_PLAN_ID, getPlanById } from '../data/plans';
 
-const STORAGE_KEY = 'bible-reading-plan';
+const STORAGE_KEY = 'bible-reading-plan-v2';
+const LEGACY_STORAGE_KEY = 'bible-reading-plan';
 
-interface StoredState {
+interface PerPlanState {
   startDate: string;
   listOffsets: number[];
-  translation: Translation;
-  daysToGenerate: number;
   completedToday: {
     date: string;
     lists: boolean[];
   };
 }
 
+interface StoredState {
+  activePlanId: string;
+  plans: Record<string, PerPlanState>;
+  translation: Translation;
+  daysToGenerate: number;
+}
+
 export interface ReadingPlanState {
+  activePlanId: string;
+  setActivePlanId: (id: string) => void;
+  activePlan: ReadingPlan;
   startDate: string;
   setStartDate: (date: string) => void;
   listOffsets: number[];
@@ -35,141 +44,280 @@ function getToday(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-function getDefaults(): StoredState {
+function getDefaultPlanState(plan: ReadingPlan): PerPlanState {
   return {
     startDate: getToday(),
-    listOffsets: Array(10).fill(0),
-    translation: 'NASB95',
-    daysToGenerate: 30,
+    listOffsets: Array(plan.lists.length).fill(0),
     completedToday: {
       date: getToday(),
-      lists: Array(10).fill(false),
+      lists: Array(plan.lists.length).fill(false),
     },
   };
 }
 
+function getDefaults(): StoredState {
+  const plans: Record<string, PerPlanState> = {};
+  for (const plan of PLANS) {
+    plans[plan.id] = getDefaultPlanState(plan);
+  }
+  return {
+    activePlanId: DEFAULT_PLAN_ID,
+    plans,
+    translation: 'NASB95',
+    daysToGenerate: 30,
+  };
+}
+
+/** Migrate legacy single-plan state to the new multi-plan format. */
+function migrateLegacy(): StoredState | null {
+  try {
+    const raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!raw) return null;
+
+    const legacy = JSON.parse(raw) as {
+      startDate?: string;
+      listOffsets?: number[];
+      translation?: Translation;
+      daysToGenerate?: number;
+      completedToday?: { date: string; lists: boolean[] };
+    };
+
+    const defaults = getDefaults();
+    const today = getToday();
+
+    let completed = legacy.completedToday;
+    if (!completed || completed.date !== today) {
+      const horner = getPlanById('horner')!;
+      completed = { date: today, lists: Array(horner.lists.length).fill(false) };
+    }
+
+    const migrated: StoredState = {
+      activePlanId: 'horner',
+      plans: {
+        ...defaults.plans,
+        horner: {
+          startDate: legacy.startDate ?? defaults.plans.horner.startDate,
+          listOffsets: legacy.listOffsets ?? defaults.plans.horner.listOffsets,
+          completedToday: completed,
+        },
+      },
+      translation: legacy.translation ?? defaults.translation,
+      daysToGenerate: legacy.daysToGenerate ?? defaults.daysToGenerate,
+    };
+
+    // Persist migrated state and remove legacy key
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+
+    return migrated;
+  } catch {
+    return null;
+  }
+}
+
 function loadFromStorage(): StoredState {
   const defaults = getDefaults();
+
+  // Try new format first
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<StoredState>;
       const today = getToday();
 
-      // Reset completedToday if it's from a different day
-      let completed = parsed.completedToday;
-      if (!completed || completed.date !== today) {
-        completed = { date: today, lists: Array(10).fill(false) };
+      // Rebuild plans, ensuring all registered plans have state
+      const plans: Record<string, PerPlanState> = {};
+      for (const plan of PLANS) {
+        const saved = parsed.plans?.[plan.id];
+        if (saved) {
+          // Reset completedToday if it's from a different day
+          let completed = saved.completedToday;
+          if (!completed || completed.date !== today) {
+            completed = { date: today, lists: Array(plan.lists.length).fill(false) };
+          }
+          plans[plan.id] = {
+            startDate: saved.startDate ?? defaults.plans[plan.id].startDate,
+            listOffsets: saved.listOffsets ?? defaults.plans[plan.id].listOffsets,
+            completedToday: completed,
+          };
+        } else {
+          plans[plan.id] = defaults.plans[plan.id];
+        }
       }
 
       return {
-        startDate: parsed.startDate ?? defaults.startDate,
-        listOffsets: parsed.listOffsets ?? defaults.listOffsets,
+        activePlanId: parsed.activePlanId ?? defaults.activePlanId,
+        plans,
         translation: parsed.translation ?? defaults.translation,
         daysToGenerate: parsed.daysToGenerate ?? defaults.daysToGenerate,
-        completedToday: completed,
       };
     }
   } catch {
     // Ignore corrupt data
   }
+
+  // Try migrating legacy format
+  const migrated = migrateLegacy();
+  if (migrated) return migrated;
+
   return defaults;
 }
 
 export function useReadingPlan(): ReadingPlanState {
-  const [startDate, setStartDate] = useState<string>(() => loadFromStorage().startDate);
-  const [listOffsets, setListOffsets] = useState<number[]>(() => loadFromStorage().listOffsets);
-  const [translation, setTranslation] = useState<Translation>(() => loadFromStorage().translation);
-  const [daysToGenerate, setDaysToGenerate] = useState<number>(() => loadFromStorage().daysToGenerate);
-  const [completedToday, setCompletedToday] = useState<{ date: string; lists: boolean[] }>(
-    () => loadFromStorage().completedToday
+  const [stored, setStored] = useState<StoredState>(() => loadFromStorage());
+
+  const activePlan = useMemo(
+    () => getPlanById(stored.activePlanId) ?? getPlanById(DEFAULT_PLAN_ID)!,
+    [stored.activePlanId]
   );
+
+  const planState = stored.plans[activePlan.id] ?? getDefaultPlanState(activePlan);
 
   // Reset completedToday if the date has changed (e.g. user left tab open overnight)
   useEffect(() => {
     const today = getToday();
-    if (completedToday.date !== today) {
-      setCompletedToday({ date: today, lists: Array(10).fill(false) });
+    if (planState.completedToday.date !== today) {
+      setStored((prev) => ({
+        ...prev,
+        plans: {
+          ...prev.plans,
+          [activePlan.id]: {
+            ...prev.plans[activePlan.id],
+            completedToday: {
+              date: today,
+              lists: Array(activePlan.lists.length).fill(false),
+            },
+          },
+        },
+      }));
     }
-  }, [completedToday.date]);
+  }, [planState.completedToday.date, activePlan.id, activePlan.lists.length]);
 
+  // Persist to localStorage
   useEffect(() => {
-    const state: StoredState = {
-      startDate,
-      listOffsets,
-      translation,
-      daysToGenerate,
-      completedToday,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [startDate, listOffsets, translation, daysToGenerate, completedToday]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+  }, [stored]);
 
   const currentDayIndex = useMemo(() => {
-    const start = new Date(startDate + 'T00:00:00');
+    const start = new Date(planState.startDate + 'T00:00:00');
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const diffMs = today.getTime() - start.getTime();
     return Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  }, [startDate]);
+  }, [planState.startDate]);
 
-  function setListOffset(listIndex: number, offset: number): void {
-    setListOffsets((prev) => {
-      const next = [...prev];
+  function setActivePlanId(id: string) {
+    if (getPlanById(id)) {
+      setStored((prev) => ({ ...prev, activePlanId: id }));
+    }
+  }
+
+  function setStartDate(date: string) {
+    setStored((prev) => ({
+      ...prev,
+      plans: {
+        ...prev.plans,
+        [activePlan.id]: { ...prev.plans[activePlan.id], startDate: date },
+      },
+    }));
+  }
+
+  function setListOffsets(offsets: number[]) {
+    setStored((prev) => ({
+      ...prev,
+      plans: {
+        ...prev.plans,
+        [activePlan.id]: { ...prev.plans[activePlan.id], listOffsets: offsets },
+      },
+    }));
+  }
+
+  function setListOffset(listIndex: number, offset: number) {
+    setStored((prev) => {
+      const next = [...prev.plans[activePlan.id].listOffsets];
       next[listIndex] = offset;
-      return next;
+      return {
+        ...prev,
+        plans: {
+          ...prev.plans,
+          [activePlan.id]: { ...prev.plans[activePlan.id], listOffsets: next },
+        },
+      };
     });
+  }
+
+  function setTranslation(t: Translation) {
+    setStored((prev) => ({ ...prev, translation: t }));
+  }
+
+  function setDaysToGenerate(n: number) {
+    setStored((prev) => ({ ...prev, daysToGenerate: n }));
   }
 
   // Toggle a reading: check advances the offset, uncheck reverts it
-  const toggleReading = useCallback((listIndex: number) => {
-    const wasCompleted = completedToday.lists[listIndex];
-    const list = HORNER_LISTS[listIndex];
+  const toggleReading = useCallback(
+    (listIndex: number) => {
+      setStored((prev) => {
+        const ps = prev.plans[activePlan.id];
+        const wasCompleted = ps.completedToday.lists[listIndex];
+        const list = activePlan.lists[listIndex];
 
-    if (wasCompleted) {
-      // Unchecking: revert the offset (go back 1)
-      setListOffsets((prev) => {
-        const next = [...prev];
-        next[listIndex] = ((next[listIndex] - 1) + list.totalChapters) % list.totalChapters;
-        return next;
+        const nextOffsets = [...ps.listOffsets];
+        if (wasCompleted) {
+          nextOffsets[listIndex] =
+            ((nextOffsets[listIndex] - 1) + list.totalChapters) % list.totalChapters;
+        } else {
+          nextOffsets[listIndex] =
+            (nextOffsets[listIndex] + 1) % list.totalChapters;
+        }
+
+        const nextLists = [...ps.completedToday.lists];
+        nextLists[listIndex] = !wasCompleted;
+
+        return {
+          ...prev,
+          plans: {
+            ...prev.plans,
+            [activePlan.id]: {
+              ...ps,
+              listOffsets: nextOffsets,
+              completedToday: { ...ps.completedToday, lists: nextLists },
+            },
+          },
+        };
       });
-    } else {
-      // Checking: advance the offset (go forward 1)
-      setListOffsets((prev) => {
-        const next = [...prev];
-        next[listIndex] = (next[listIndex] + 1) % list.totalChapters;
-        return next;
-      });
-    }
+    },
+    [activePlan.id, activePlan.lists]
+  );
 
-    // Toggle the completed state
-    setCompletedToday((prev) => {
-      const lists = [...prev.lists];
-      lists[listIndex] = !wasCompleted;
-      return { ...prev, lists };
-    });
-  }, [completedToday.lists]);
-
-  function resetAll(): void {
+  function resetAll() {
     const defaults = getDefaults();
-    setStartDate(defaults.startDate);
-    setListOffsets(defaults.listOffsets);
-    setTranslation(defaults.translation);
-    setDaysToGenerate(defaults.daysToGenerate);
-    setCompletedToday(defaults.completedToday);
+    setStored((prev) => ({
+      ...prev,
+      plans: {
+        ...prev.plans,
+        [activePlan.id]: defaults.plans[activePlan.id],
+      },
+      translation: defaults.translation,
+      daysToGenerate: defaults.daysToGenerate,
+    }));
   }
 
   return {
-    startDate,
+    activePlanId: stored.activePlanId,
+    setActivePlanId,
+    activePlan,
+    startDate: planState.startDate,
     setStartDate,
-    listOffsets,
+    listOffsets: planState.listOffsets,
     setListOffsets,
     setListOffset,
-    translation,
+    translation: stored.translation,
     setTranslation,
-    daysToGenerate,
+    daysToGenerate: stored.daysToGenerate,
     setDaysToGenerate,
     currentDayIndex,
-    completedToday: completedToday.lists,
+    completedToday: planState.completedToday.lists,
     toggleReading,
     resetAll,
   };
