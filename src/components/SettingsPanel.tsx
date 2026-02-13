@@ -18,7 +18,8 @@ interface SettingsPanelProps {
   setFontFamily: (f: FontFamily) => void;
   fontSize: FontSize;
   setFontSize: (s: FontSize) => void;
-  resetAll: () => void;
+  resetPlan: () => void;
+  resetPreferences: () => void;
   onClearCache: () => Promise<void>;
 }
 
@@ -71,7 +72,8 @@ export function SettingsPanel({
   setFontFamily,
   fontSize,
   setFontSize,
-  resetAll,
+  resetPlan,
+  resetPreferences,
   onClearCache,
 }: SettingsPanelProps) {
   const [cacheClearing, setCacheClearing] = useState(false);
@@ -352,7 +354,7 @@ export function SettingsPanel({
           </button>
           <button
             type="button"
-            onClick={resetAll}
+            onClick={() => { resetPlan(); resetPreferences(); }}
             className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-700 rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
           >
             Reset All to Defaults

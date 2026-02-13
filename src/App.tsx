@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useReadingPlan } from './hooks/useReadingPlan';
+import { useBiblePreferences } from './hooks/useBiblePreferences';
 import { getReadingsForDay, generatePlan } from './utils/planGenerator';
 import { getCalendarReadingsForDay, generateCalendarPlan } from './utils/calendarPlanGenerator';
 import type { Reading, Theme } from './types';
@@ -14,6 +15,7 @@ import { clearCache } from './utils/bibleCache';
 
 function App() {
   const state = useReadingPlan();
+  const prefs = useBiblePreferences();
   const [activeTab, setActiveTab] = useState('Today');
   const [activeReading, setActiveReading] = useState<Reading | null>(null);
   const [journalOpen, setJournalOpen] = useState(false);
@@ -34,16 +36,16 @@ function App() {
     }
 
     const mql = window.matchMedia('(prefers-color-scheme: dark)');
-    applyTheme(state.theme, mql.matches);
+    applyTheme(prefs.theme, mql.matches);
 
     function handleChange(e: MediaQueryListEvent) {
-      if (state.theme === 'system') {
+      if (prefs.theme === 'system') {
         applyTheme('system', e.matches);
       }
     }
     mql.addEventListener('change', handleChange);
     return () => mql.removeEventListener('change', handleChange);
-  }, [state.theme]);
+  }, [prefs.theme]);
 
   const plan = state.activePlan;
 
@@ -89,12 +91,12 @@ function App() {
       <Header
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        translation={state.translation}
-        onTranslationChange={state.setTranslation}
+        translation={prefs.translation}
+        onTranslationChange={prefs.setTranslation}
         activePlanId={state.activePlanId}
         onPlanChange={handlePlanChange}
-        theme={state.theme}
-        onThemeChange={state.setTheme}
+        theme={prefs.theme}
+        onThemeChange={prefs.setTheme}
       />
 
       {showReader ? (
@@ -119,12 +121,12 @@ function App() {
             <div className={journalOpen ? 'w-1/2 min-w-0 h-full' : 'w-full h-full'}>
               <BibleReader
                 selection={activeReading}
-                translation={state.translation}
-                displayMode={state.displayMode}
-                onDisplayModeChange={state.setDisplayMode}
-                fontFamily={state.fontFamily}
-                fontSize={state.fontSize}
-                onFontSizeChange={state.setFontSize}
+                translation={prefs.translation}
+                displayMode={prefs.displayMode}
+                onDisplayModeChange={prefs.setDisplayMode}
+                fontFamily={prefs.fontFamily}
+                fontSize={prefs.fontSize}
+                onFontSizeChange={prefs.setFontSize}
                 onToggleJournal={() => setJournalOpen((p) => !p)}
                 journalOpen={journalOpen}
               />
@@ -133,8 +135,8 @@ function App() {
               <div className="w-1/2 min-w-0 h-full border-l border-gray-200 dark:border-gray-700">
                 <JournalPane
                   selection={activeReading}
-                  fontFamily={state.fontFamily}
-                  fontSize={state.fontSize}
+                  fontFamily={prefs.fontFamily}
+                  fontSize={prefs.fontSize}
                 />
               </div>
             )}
@@ -155,15 +157,16 @@ function App() {
                 setStartDate={state.setStartDate}
                 listOffsets={state.listOffsets}
                 setListOffset={state.setListOffset}
-                translation={state.translation}
-                setTranslation={state.setTranslation}
+                translation={prefs.translation}
+                setTranslation={prefs.setTranslation}
                 daysToGenerate={state.daysToGenerate}
                 setDaysToGenerate={state.setDaysToGenerate}
-                fontFamily={state.fontFamily}
-                setFontFamily={state.setFontFamily}
-                fontSize={state.fontSize}
-                setFontSize={state.setFontSize}
-                resetAll={state.resetAll}
+                fontFamily={prefs.fontFamily}
+                setFontFamily={prefs.setFontFamily}
+                fontSize={prefs.fontSize}
+                setFontSize={prefs.setFontSize}
+                resetPlan={state.resetPlan}
+                resetPreferences={prefs.resetPreferences}
                 onClearCache={clearCache}
               />
             )}
