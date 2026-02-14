@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-02-14
+
+### Added
+
+- **Full Bible download** — download all 1,189 chapters of any translation for complete offline use, with progress tracking per translation
+- **Concurrent downloads** — download multiple translations simultaneously, each with its own progress bar and cancel button
+- **"Download All Started" button** — one-click to resume downloading all partially-cached translations
+- **Daily cache freshness check** — lightweight startup check compares cached Genesis 1 with the API (max once per 24 hours, silent when offline)
+- **Translation selector in header** — quick-switch translation from any page via dropdown next to the theme toggle
+- **Cache status dashboard** in Settings — see chapter counts for all four translations at a glance, with download dates
+
 ## [1.0.0-beta.2] - 2026-02-14
 
 ### Added
@@ -198,6 +209,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tauri desktop app for macOS and Linux
 - GitHub Actions release workflow
 
+[1.0.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0-beta.2...v1.0.0
 [1.0.0-beta.2]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0-beta.1...v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.9.1...v1.0.0-beta.1
 [0.9.1]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.9.0...v0.9.1

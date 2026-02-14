@@ -10,7 +10,7 @@ import { Header } from './components/Header';
 import { ReadView } from './components/ReadView';
 import { PlanView } from './components/PlanView';
 import { SettingsPanel } from './components/SettingsPanel';
-import { clearCache } from './utils/bibleCache';
+import { clearCache, checkCacheFreshness } from './utils/bibleCache';
 
 const PLAN_BAR_KEY = 'plan-bar-v1';
 
@@ -33,6 +33,14 @@ function App() {
   }, [planBarOpen]);
 
   const handleTogglePlanBar = useCallback(() => setPlanBarOpen((p) => !p), []);
+
+  // Daily cache freshness check (runs once per app launch, max one API call per day)
+  const [cacheStale, setCacheStale] = useState(false);
+  useEffect(() => {
+    checkCacheFreshness(prefs.translation).then((result) => {
+      setCacheStale(result === 'stale');
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync theme classes on <html>
   useEffect(() => {
@@ -93,6 +101,8 @@ function App() {
       <Header
         theme={prefs.theme}
         onThemeChange={prefs.setTheme}
+        translation={prefs.translation}
+        onTranslationChange={prefs.setTranslation}
         planBarOpen={planBarOpen}
         onTogglePlanBar={handleTogglePlanBar}
       />
@@ -145,6 +155,7 @@ function App() {
                 resetPlan={state.resetPlan}
                 resetPreferences={prefs.resetPreferences}
                 onClearCache={clearCache}
+                cacheStale={cacheStale}
               />
             </div>
           </main>

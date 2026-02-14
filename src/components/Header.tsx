@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import type { Theme } from '../types';
+import type { Theme, Translation } from '../types';
 
 const THEME_CYCLE: Theme[] = ['light', 'paper', 'dark', 'warm-dark'];
 
@@ -16,9 +16,13 @@ function getNextTheme(current: Theme): Theme {
   return THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
 }
 
+const TRANSLATIONS: Translation[] = ['NASB95', 'LSB', 'ESV', 'KJV'];
+
 interface HeaderProps {
   theme: Theme;
   onThemeChange: (t: Theme) => void;
+  translation: Translation;
+  onTranslationChange: (t: Translation) => void;
   planBarOpen: boolean;
   onTogglePlanBar: () => void;
 }
@@ -26,6 +30,8 @@ interface HeaderProps {
 export function Header({
   theme,
   onThemeChange,
+  translation,
+  onTranslationChange,
   planBarOpen,
   onTogglePlanBar,
 }: HeaderProps) {
@@ -38,8 +44,18 @@ export function Header({
             Bible Reading Plan
           </h1>
 
-          {/* Theme toggle */}
-          <div className="hidden sm:flex items-center">
+          {/* Translation + Theme toggle */}
+          <div className="hidden sm:flex items-center gap-2">
+            <select
+              value={translation}
+              onChange={(e) => onTranslationChange(e.target.value as Translation)}
+              className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              aria-label="Translation"
+            >
+              {TRANSLATIONS.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
             <button
               type="button"
               onClick={() => onThemeChange(getNextTheme(theme))}

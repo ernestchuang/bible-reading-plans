@@ -10,6 +10,8 @@ A daily Bible reading app supporting multiple reading plans — including **Dr. 
 - **Color-coded reading lists** with check-off tracking
 - **Native Bible reader** — verse numbers, powered by the Bolls Life API (NASB95, LSB, ESV, KJV)
 - **Display modes** — verse-by-verse, paragraph, and reader's layout (LSB includes poetry formatting)
+- **Offline Bible download** — download all 1,189 chapters per translation for full offline use; concurrent downloads with progress tracking
+- **Translation quick-switch** — change translation from any page via the header dropdown
 - **Themes** — Light, Paper, Dark, Warm Dark, and System — cycle in the header or pick from Settings
 - **Carry-over system** — unchecked readings stay for the next day
 - **Progress tracking** — completion state resets daily, list positions persist

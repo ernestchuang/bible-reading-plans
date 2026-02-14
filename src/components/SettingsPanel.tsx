@@ -1,7 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import type { ReadingList, Translation, FontFamily, FontSize, Theme } from '../types';
 import { FONT_OPTIONS, FONT_SIZES, getFontCss } from '../data/fonts';
 import { PLANS } from '../data/plans';
+import {
+  countCachedChapters,
+  downloadEntireBible,
+  TOTAL_CHAPTERS,
+} from '../utils/bibleCache';
 
 const THEMES: { value: Theme; label: string }[] = [
   { value: 'light', label: 'Light' },
@@ -34,6 +39,7 @@ interface SettingsPanelProps {
   resetPlan: () => void;
   resetPreferences: () => void;
   onClearCache: () => Promise<void>;
+  cacheStale: boolean;
 }
 
 /** Convert a flat offset (0-based) into a { bookIndex, chapter } for a given list. */
@@ -92,15 +98,107 @@ export function SettingsPanel({
   resetPlan,
   resetPreferences,
   onClearCache,
+  cacheStale,
 }: SettingsPanelProps) {
   const [cacheClearing, setCacheClearing] = useState(false);
   const [cacheCleared, setCacheCleared] = useState(false);
+
+  // Bible download state — per translation, concurrent
+  const [cachedCounts, setCachedCounts] = useState<Record<string, number | null>>(
+    () => Object.fromEntries(TRANSLATIONS.map((t) => [t, null]))
+  );
+  const [downloadingSet, setDownloadingSet] = useState<Set<Translation>>(new Set());
+  const [downloadProgressMap, setDownloadProgressMap] = useState<Record<string, number>>({});
+  const abortRefs = useRef<Record<string, AbortController>>({});
+  // Trigger re-read of download metadata
+  const [downloadVersion, setDownloadVersion] = useState(0);
+
+  // Load cached chapter counts for all translations on mount
+  useEffect(() => {
+    let cancelled = false;
+    for (const t of TRANSLATIONS) {
+      countCachedChapters(t).then((count) => {
+        if (!cancelled) setCachedCounts((prev) => ({ ...prev, [t]: count }));
+      });
+    }
+    return () => { cancelled = true; };
+  }, []);
+
+  // Read download metadata (per-translation timestamps)
+  const downloadTimestamps = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('bible-download-v1');
+      if (!raw) return {} as Record<string, number>;
+      return JSON.parse(raw) as Record<string, number>;
+    } catch { return {} as Record<string, number>; }
+  }, [downloadVersion]); // re-read after download completes
+
+  async function handleDownload(t: Translation) {
+    setDownloadingSet((prev) => new Set(prev).add(t));
+    setDownloadProgressMap((prev) => ({ ...prev, [t]: 0 }));
+    const controller = new AbortController();
+    abortRefs.current[t] = controller;
+    try {
+      await downloadEntireBible(
+        t,
+        (completed, total) =>
+          setDownloadProgressMap((prev) => ({
+            ...prev,
+            [t]: Math.round((completed / total) * 100),
+          })),
+        controller.signal,
+      );
+      setCachedCounts((prev) => ({ ...prev, [t]: TOTAL_CHAPTERS }));
+      setDownloadVersion((v) => v + 1);
+    } catch {
+      // Aborted or failed — refresh count
+      countCachedChapters(t).then((count) => {
+        setCachedCounts((prev) => ({ ...prev, [t]: count }));
+      });
+    } finally {
+      setDownloadingSet((prev) => {
+        const next = new Set(prev);
+        next.delete(t);
+        return next;
+      });
+      delete abortRefs.current[t];
+    }
+  }
+
+  function handleCancelDownload(t: Translation) {
+    abortRefs.current[t]?.abort();
+  }
+
+  function handleCancelAll() {
+    for (const controller of Object.values(abortRefs.current)) {
+      controller.abort();
+    }
+  }
+
+  // Translations that have some chapters cached but aren't fully downloaded
+  const startedTranslations = useMemo(
+    () => TRANSLATIONS.filter((t) => {
+      const count = cachedCounts[t];
+      return count !== null && count > 0 && count < TOTAL_CHAPTERS && !downloadingSet.has(t);
+    }),
+    [cachedCounts, downloadingSet],
+  );
+
+  function handleDownloadAllStarted() {
+    for (const t of startedTranslations) {
+      handleDownload(t);
+    }
+  }
 
   async function handleClearCache() {
     setCacheClearing(true);
     setCacheCleared(false);
     try {
       await onClearCache();
+      localStorage.removeItem('bible-download-v1');
+      localStorage.removeItem('bible-freshness-v1');
+      setCachedCounts(Object.fromEntries(TRANSLATIONS.map((t) => [t, 0])));
+      setDownloadVersion((v) => v + 1);
       setCacheCleared(true);
       setTimeout(() => setCacheCleared(false), 2000);
     } catch {
@@ -395,6 +493,117 @@ export function SettingsPanel({
           </div>
         </div>
       )}
+
+      {/* Bible Download */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Bible Download
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Download the entire Bible for offline use. Chapters are cached
+          individually — already-cached chapters are skipped.
+        </p>
+
+        {/* Stale cache warning */}
+        {cacheStale && downloadingSet.size === 0 && (
+          <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">
+            Cache may be outdated — refresh recommended
+          </p>
+        )}
+
+        <div className="space-y-3">
+          {TRANSLATIONS.map((t) => {
+            const count = cachedCounts[t];
+            const isDownloading = downloadingSet.has(t);
+            const progress = downloadProgressMap[t] ?? 0;
+            const timestamp = downloadTimestamps[t];
+
+            return (
+              <div
+                key={t}
+                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              >
+                {/* Translation name */}
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-16 shrink-0">
+                  {t}
+                </span>
+
+                {/* Cache count / progress */}
+                <div className="flex-1 min-w-0">
+                  {isDownloading ? (
+                    <div>
+                      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        <span>Downloading...</span>
+                        <span>{progress}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-indigo-500 rounded-full transition-all duration-300"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {count === null
+                        ? 'Checking...'
+                        : `${count.toLocaleString()} / ${TOTAL_CHAPTERS.toLocaleString()} chapters`}
+                      {timestamp && (
+                        <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">
+                          — downloaded {new Date(timestamp).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Action button */}
+                {isDownloading ? (
+                  <button
+                    type="button"
+                    onClick={() => handleCancelDownload(t)}
+                    className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors shrink-0"
+                  >
+                    Cancel
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(t)}
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-700 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shrink-0"
+                  >
+                    {count === TOTAL_CHAPTERS ? 'Refresh' : 'Download'}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Bulk actions */}
+        {(startedTranslations.length > 0 || downloadingSet.size > 1) && (
+          <div className="mt-4 flex flex-wrap gap-3">
+            {startedTranslations.length > 0 && (
+              <button
+                type="button"
+                onClick={handleDownloadAllStarted}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-700 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+              >
+                Download All Started ({startedTranslations.join(', ')})
+              </button>
+            )}
+            {downloadingSet.size > 1 && (
+              <button
+                type="button"
+                onClick={handleCancelAll}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel All
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Data management */}
       <div className="pt-4 border-t border-gray-200 dark:border-gray-700">

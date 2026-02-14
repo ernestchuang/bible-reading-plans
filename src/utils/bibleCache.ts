@@ -8,6 +8,7 @@ import {
 } from '@tauri-apps/plugin-fs';
 import type { Translation, Verse } from '../types';
 import { fetchChapter, getBookNumber, getApiTranslation } from './bibleApi';
+import { ALL_BIBLE_BOOKS } from '../data/bibleBooks';
 
 const CACHE_ROOT = 'cache';
 
@@ -104,4 +105,101 @@ export async function clearCache(): Promise<void> {
     baseDir: BaseDirectory.AppData,
     recursive: true,
   });
+}
+
+/** Flat array of all 1,189 Bible chapters with book name, book number, and chapter. */
+export function getAllChapters(): { book: string; bookNumber: number; chapter: number }[] {
+  const chapters: { book: string; bookNumber: number; chapter: number }[] = [];
+  for (const b of ALL_BIBLE_BOOKS) {
+    const bookNumber = getBookNumber(b.name);
+    for (let ch = 1; ch <= b.chapters; ch++) {
+      chapters.push({ book: b.name, bookNumber, chapter: ch });
+    }
+  }
+  return chapters;
+}
+
+export const TOTAL_CHAPTERS = 1189;
+
+/** Count how many chapters are cached for a given translation. */
+export async function countCachedChapters(translation: Translation): Promise<number> {
+  const apiTranslation = getApiTranslation(translation);
+  const chapters = getAllChapters();
+  let count = 0;
+  for (const { bookNumber, chapter } of chapters) {
+    const filePath = getCachePath(apiTranslation, bookNumber, chapter);
+    const fileExists = await exists(filePath, { baseDir: BaseDirectory.AppData });
+    if (fileExists) count++;
+  }
+  return count;
+}
+
+/** Download the entire Bible for a translation, with concurrency control. */
+export async function downloadEntireBible(
+  translation: Translation,
+  onProgress: (completed: number, total: number) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  const chapters = getAllChapters();
+  const total = chapters.length;
+  let completed = 0;
+  const CONCURRENCY = 5;
+
+  // Process chapters in batches of CONCURRENCY
+  for (let i = 0; i < total; i += CONCURRENCY) {
+    if (signal?.aborted) return;
+    const batch = chapters.slice(i, i + CONCURRENCY);
+    await Promise.all(
+      batch.map(async ({ book, chapter }) => {
+        if (signal?.aborted) return;
+        await fetchChapterCached(book, chapter, translation);
+        completed++;
+        onProgress(completed, total);
+      }),
+    );
+  }
+
+  // Record download metadata (per-translation)
+  const existing = JSON.parse(localStorage.getItem('bible-download-v1') || '{}') as Record<string, number>;
+  existing[translation] = Date.now();
+  localStorage.setItem('bible-download-v1', JSON.stringify(existing));
+}
+
+const FRESHNESS_KEY = 'bible-freshness-v1';
+
+/** Lightweight daily freshness check — compares cached Genesis 1 with API. */
+export async function checkCacheFreshness(
+  translation: Translation,
+): Promise<'fresh' | 'stale'> {
+  try {
+    // Skip if checked recently (< 24 hours)
+    const raw = localStorage.getItem(FRESHNESS_KEY);
+    if (raw) {
+      const { timestamp } = JSON.parse(raw) as { timestamp: number };
+      if (Date.now() - timestamp < 24 * 60 * 60 * 1000) return 'fresh';
+    }
+
+    // Fetch Genesis 1 directly (bypass cache)
+    const freshVerses = await fetchChapter('Genesis', 1, translation);
+
+    // Read cached version
+    const apiTranslation = getApiTranslation(translation);
+    const cached = await readCachedChapter(apiTranslation, 1, 1);
+    if (cached === null) {
+      // No cache yet — nothing to be stale about
+      localStorage.setItem(FRESHNESS_KEY, JSON.stringify({ timestamp: Date.now() }));
+      return 'fresh';
+    }
+
+    // Compare by serialized content
+    const isSame = JSON.stringify(freshVerses) === JSON.stringify(cached);
+    if (isSame) {
+      localStorage.setItem(FRESHNESS_KEY, JSON.stringify({ timestamp: Date.now() }));
+      return 'fresh';
+    }
+    return 'stale';
+  } catch {
+    // Network error — don't nag when offline
+    return 'fresh';
+  }
 }

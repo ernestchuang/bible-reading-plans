@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import type { BibleSelection, Translation, Verse, DisplayMode, FontFamily, FontSize } from '../types';
 import { formatBibleSelection } from '../types';
 import { fetchChapterCached } from '../utils/bibleCache';
@@ -194,6 +194,8 @@ export function BibleReader({ selection, translation, displayMode, onDisplayMode
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const loadingMoreRef = useRef(false);
+  const loadingPrevRef = useRef(false);
+  const prevScrollHeightRef = useRef(0);
   const [visibleChapter, setVisibleChapter] = useState<{ book: string; chapter: number } | null>(null);
 
   const fontCss = getFontCss(fontFamily);
@@ -252,6 +254,38 @@ export function BibleReader({ selection, translation, displayMode, onDisplayMode
       setLoadingMore(false);
     }
   }, [blocks, translation]);
+
+  // Load previous chapter and prepend it
+  const loadPrevChapter = useCallback(async () => {
+    if (loadingPrevRef.current || loadingMoreRef.current || blocks.length === 0) return;
+    const firstBlock = blocks[0];
+    const prev = getPrevChapter(firstBlock.book, firstBlock.chapter);
+    if (!prev) return;
+
+    loadingPrevRef.current = true;
+    try {
+      const verses = await fetchChapterCached(prev.book, prev.chapter, translation);
+      if (scrollRef.current) {
+        prevScrollHeightRef.current = scrollRef.current.scrollHeight;
+      }
+      setBlocks((b) => [{ book: prev.book, chapter: prev.chapter, verses }, ...b]);
+    } catch {
+      // Silently fail
+    } finally {
+      loadingPrevRef.current = false;
+    }
+  }, [blocks, translation]);
+
+  // Preserve scroll position after prepending a chapter
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || prevScrollHeightRef.current === 0) return;
+    const diff = el.scrollHeight - prevScrollHeightRef.current;
+    if (diff > 0) {
+      el.scrollTop += diff;
+    }
+    prevScrollHeightRef.current = 0;
+  }, [blocks]);
 
   // Stable key for selection identity
   const selectionKey = selection
@@ -318,7 +352,7 @@ export function BibleReader({ selection, translation, displayMode, onDisplayMode
     }
   }, [visibleChapter, onVisibleChapterChange]);
 
-  // Continuous scroll: load next chapter when near bottom
+  // Continuous scroll: load next/prev chapter when near edges
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -326,15 +360,19 @@ export function BibleReader({ selection, translation, displayMode, onDisplayMode
     function handleScroll() {
       if (!el) return;
       const { scrollTop, scrollHeight, clientHeight } = el;
-      // Trigger when within 300px of the bottom
+      // Near bottom — load next
       if (scrollHeight - scrollTop - clientHeight < 300) {
         loadNextChapter();
+      }
+      // Near top — load prev
+      if (scrollTop < 200) {
+        loadPrevChapter();
       }
     }
 
     el.addEventListener('scroll', handleScroll, { passive: true });
     return () => el.removeEventListener('scroll', handleScroll);
-  }, [loadNextChapter]);
+  }, [loadNextChapter, loadPrevChapter]);
 
   // Navigation handlers — navigate relative to visible chapter, not original selection
   const handlePrev = useCallback(() => {
