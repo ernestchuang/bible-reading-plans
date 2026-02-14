@@ -3,14 +3,16 @@ import type { JournalEntry } from '../../types/journal';
 import type { FontFamily } from '../../types';
 import { getFontCss } from '../../data/fonts';
 import { formatDate, getPreviewLine, renderMarkdown } from '../../utils/journalRender';
+import { TagBadge } from './TagBadge';
 
 interface JournalEntryCardProps {
   entry: JournalEntry;
   onReply?: (filename: string) => void;
+  onTagClick?: (tag: string) => void;
   fontFamily: FontFamily;
 }
 
-export function JournalEntryCard({ entry, onReply, fontFamily }: JournalEntryCardProps) {
+export function JournalEntryCard({ entry, onReply, onTagClick, fontFamily }: JournalEntryCardProps) {
   const preview = getPreviewLine(entry.body);
   const [expanded, setExpanded] = useState(false);
   const fontCss = getFontCss(fontFamily);
@@ -23,9 +25,22 @@ export function JournalEntryCard({ entry, onReply, fontFamily }: JournalEntryCar
       >
         <div className="min-w-0 flex-1 mr-2">
           <p className="text-sm text-gray-900 dark:text-gray-100 truncate" style={{ fontFamily: fontCss }}>{preview}</p>
-          <span className="text-xs text-gray-400 dark:text-gray-500">
-            {formatDate(entry.meta.date)}
-          </span>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-xs text-gray-400 dark:text-gray-500">
+              {formatDate(entry.meta.date)}
+            </span>
+            {entry.meta.tags && entry.meta.tags.length > 0 && (
+              <div className="flex gap-1 flex-wrap">
+                {entry.meta.tags.map((tag) => (
+                  <TagBadge
+                    key={tag}
+                    tag={tag}
+                    onClick={onTagClick ? () => onTagClick(tag) : undefined}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {onReply && (
@@ -50,17 +65,6 @@ export function JournalEntryCard({ entry, onReply, fontFamily }: JournalEntryCar
           style={{ fontFamily: fontCss }}
           dangerouslySetInnerHTML={{ __html: renderMarkdown(entry.body) }}
         />
-      )}
-      {entry.meta.linkedTo && (
-        <div className="px-3 py-1 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 border-t border-amber-100 dark:border-amber-800 rounded-b-lg">
-          In reply to{' '}
-          {formatDate(
-            entry.meta.linkedTo
-              .replace(/\.md$/, '')
-              .replace(/-/g, (m, _p1, offset) => (offset > 9 ? ':' : m))
-              .replace('T', ' ')
-          )}
-        </div>
       )}
     </div>
   );

@@ -3,9 +3,12 @@ import type { BibleSelection, FontFamily, FontSize } from '../../types';
 import { formatBibleSelection } from '../../types';
 import type { JournalViewMode } from '../../types/journal';
 import { useJournal } from '../../hooks/useJournal';
+import { useAvailableTags } from '../../hooks/useAvailableTags';
+import { matchesTags } from '../../utils/tagUtils';
 import { JournalEditor } from './JournalEditor';
 import { JournalEntryCard } from './JournalEntryCard';
 import { JournalDateView } from './JournalDateView';
+import { TagFilter } from './TagFilter';
 
 interface JournalPaneProps {
   selection: BibleSelection | null;
@@ -25,8 +28,13 @@ export function JournalPane({ selection, fontFamily, fontSize }: JournalPaneProp
     setViewMode,
   } = useJournal(book, chapter);
 
+  const availableTags = useAvailableTags(entries);
   const [composing, setComposing] = useState(false);
-  const [linkedTo, setLinkedTo] = useState<string | undefined>(undefined);
+  const [replyTo, setReplyTo] = useState<string | undefined>(undefined);
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+
+  const filteredEntries = entries.filter((e) => matchesTags(e, selectedTags));
+  const filteredAllEntries = allEntries.filter((e) => matchesTags(e, selectedTags));
 
   if (!selection) {
     return (
@@ -36,20 +44,20 @@ export function JournalPane({ selection, fontFamily, fontSize }: JournalPaneProp
     );
   }
 
-  function handleSave(markdown: string) {
-    saveEntry(markdown, linkedTo).then(() => {
+  function handleSave(markdown: string, tags: string[]) {
+    saveEntry(markdown, replyTo, tags).then(() => {
       setComposing(false);
-      setLinkedTo(undefined);
+      setReplyTo(undefined);
     });
   }
 
   function handleCancel() {
     setComposing(false);
-    setLinkedTo(undefined);
+    setReplyTo(undefined);
   }
 
   function handleReply(filename: string) {
-    setLinkedTo(filename);
+    setReplyTo(filename);
     setComposing(true);
   }
 
@@ -58,8 +66,18 @@ export function JournalPane({ selection, fontFamily, fontSize }: JournalPaneProp
     _book: string,
     _chapter: number
   ) {
-    setLinkedTo(filename);
+    setReplyTo(filename);
     setComposing(true);
+  }
+
+  function handleTagClick(tag: string) {
+    const newTags = new Set(selectedTags);
+    if (newTags.has(tag)) {
+      newTags.delete(tag);
+    } else {
+      newTags.add(tag);
+    }
+    setSelectedTags(newTags);
   }
 
   if (composing) {
@@ -74,9 +92,10 @@ export function JournalPane({ selection, fontFamily, fontSize }: JournalPaneProp
           <JournalEditor
             onSave={handleSave}
             onCancel={handleCancel}
-            linkedTo={linkedTo}
+            replyTo={replyTo}
             fontFamily={fontFamily}
             fontSize={fontSize}
+            availableTags={availableTags}
           />
         </div>
       </div>
@@ -90,7 +109,12 @@ export function JournalPane({ selection, fontFamily, fontSize }: JournalPaneProp
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {formatBibleSelection(selection)} — Journal
         </span>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          <TagFilter
+            availableTags={availableTags}
+            selectedTags={selectedTags}
+            onChange={setSelectedTags}
+          />
           <ViewToggle viewMode={viewMode} onChange={setViewMode} />
         </div>
       </div>
@@ -102,17 +126,20 @@ export function JournalPane({ selection, fontFamily, fontSize }: JournalPaneProp
             <div className="flex items-center justify-center py-8 text-gray-400 dark:text-gray-500">
               Loading...
             </div>
-          ) : entries.length === 0 ? (
+          ) : filteredEntries.length === 0 ? (
             <div className="flex items-center justify-center py-8 text-gray-400 dark:text-gray-500 text-sm">
-              No entries for {formatBibleSelection(selection)} yet.
+              {selectedTags.size > 0
+                ? 'No entries match the selected tags.'
+                : `No entries for ${formatBibleSelection(selection)} yet.`}
             </div>
           ) : (
             <div className="space-y-3">
-              {entries.map((entry) => (
+              {filteredEntries.map((entry) => (
                 <JournalEntryCard
                   key={entry.filename}
                   entry={entry}
                   onReply={handleReply}
+                  onTagClick={handleTagClick}
                   fontFamily={fontFamily}
                 />
               ))}
@@ -120,7 +147,7 @@ export function JournalPane({ selection, fontFamily, fontSize }: JournalPaneProp
           )
         ) : (
           <JournalDateView
-            entries={allEntries}
+            entries={filteredAllEntries}
             isLoading={isLoading}
             onReply={handleDateViewReply}
             fontFamily={fontFamily}

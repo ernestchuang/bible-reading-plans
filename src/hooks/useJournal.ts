@@ -17,6 +17,11 @@ function makeTimestampFilename(): string {
   );
 }
 
+/** Strip HTML <br/> / <br> tags (Milkdown hard-break artifacts) */
+function cleanMarkdown(markdown: string): string {
+  return markdown.replace(/<br\s*\/?>/gi, '').trim();
+}
+
 async function loadEntriesForChapter(
   book: string,
   chapter: number
@@ -103,17 +108,26 @@ export function useJournal(book: string | null, chapter: number | null) {
   }, [viewMode]);
 
   const saveEntry = useCallback(
-    async (markdown: string, linkedTo?: string) => {
+    async (markdown: string, replyTo?: string, tags?: string[]) => {
       if (!book || chapter == null) return;
       const now = new Date();
       const meta = {
         date: now.toISOString().slice(0, 19),
         book,
         chapter,
-        linkedTo,
+        tags: tags && tags.length > 0 ? tags : undefined,
       };
+
+      // Clean markdown (strip <br> tags from Milkdown)
+      const cleanedMarkdown = cleanMarkdown(markdown);
+
+      // Prepend wikilink if this is a reply
+      const bodyWithReply = replyTo
+        ? `> In reply to [[${replyTo.replace(/\.md$/, '')}]]\n\n${cleanedMarkdown}`
+        : cleanedMarkdown;
+
       const filename = makeTimestampFilename();
-      const content = serializeFrontmatter(meta, markdown);
+      const content = serializeFrontmatter(meta, bodyWithReply);
       await writeEntryFile(book, chapter, filename, content);
 
       // Reload entries for this chapter

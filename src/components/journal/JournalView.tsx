@@ -1,12 +1,18 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { FontFamily } from '../../types';
 import type { JournalEntry, JournalBrowseMode } from '../../types/journal';
+import type { BookGroup } from '../../hooks/useJournalBrowser';
 import { useJournalBrowser } from '../../hooks/useJournalBrowser';
+import { useAvailableTags } from '../../hooks/useAvailableTags';
+import { matchesTags } from '../../utils/tagUtils';
 import { getFontCss } from '../../data/fonts';
 import { formatDate, renderMarkdown } from '../../utils/journalRender';
 import { JournalDateBrowse } from './JournalDateBrowse';
 import { JournalBookBrowse } from './JournalBookBrowse';
+import { TagFilter } from './TagFilter';
+import { TagBadge } from './TagBadge';
+import { BIBLE_TESTAMENTS } from '../../data/bibleBooks';
 
 interface JournalViewProps {
   fontFamily: FontFamily;
@@ -14,12 +20,48 @@ interface JournalViewProps {
 
 const READER_KEY = 'bible-reader-v1';
 
+/** Flat canonical order of all Bible book names. */
+const BOOK_ORDER = BIBLE_TESTAMENTS.flatMap((t) =>
+  t.sections.flatMap((s) => s.books.map((b) => b.name))
+);
+
 export function JournalView({ fontFamily }: JournalViewProps) {
   const [browseMode, setBrowseMode] = useState<JournalBrowseMode>('date');
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
-  const { allEntries, bookGroups, isLoading, error } = useJournalBrowser();
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const { allEntries, isLoading, error } = useJournalBrowser();
   const navigate = useNavigate();
   const fontCss = getFontCss(fontFamily);
+
+  const availableTags = useAvailableTags(allEntries);
+  const filteredEntries = useMemo(
+    () => allEntries.filter((e) => matchesTags(e, selectedTags)),
+    [allEntries, selectedTags]
+  );
+
+  const filteredBookGroups = useMemo(() => {
+    // Group filtered entries by book → chapter
+    const map = new Map<string, Map<number, JournalEntry[]>>();
+    for (const entry of filteredEntries) {
+      const { book, chapter } = entry.meta;
+      if (!map.has(book)) map.set(book, new Map());
+      const chapterMap = map.get(book)!;
+      if (!chapterMap.has(chapter)) chapterMap.set(chapter, []);
+      chapterMap.get(chapter)!.push(entry);
+    }
+
+    // Build array in canonical Bible order
+    const groups: BookGroup[] = [];
+    for (const bookName of BOOK_ORDER) {
+      const chapterMap = map.get(bookName);
+      if (!chapterMap) continue;
+      const chapters = Array.from(chapterMap.entries())
+        .sort(([a], [b]) => a - b)
+        .map(([chapter, chapterEntries]) => ({ chapter, entries: chapterEntries }));
+      groups.push({ book: bookName, chapters });
+    }
+    return groups;
+  }, [filteredEntries]);
 
   const handleNavigateToReader = useCallback(
     (book: string, chapter: number) => {
@@ -61,27 +103,53 @@ export function JournalView({ fontFamily }: JournalViewProps) {
     );
   }
 
+  function handleTagClick(tag: string) {
+    const newTags = new Set(selectedTags);
+    if (newTags.has(tag)) {
+      newTags.delete(tag);
+    } else {
+      newTags.add(tag);
+    }
+    setSelectedTags(newTags);
+  }
+
   return (
     <div className="flex h-full min-h-0">
       {/* Left panel — entry list */}
       <div className="w-72 shrink-0 border-r border-gray-200 dark:border-gray-700 flex flex-col min-h-0 bg-white dark:bg-gray-900">
         {/* Mode toggle header */}
         <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shrink-0">
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Browse by</span>
-          <BrowseToggle mode={browseMode} onChange={setBrowseMode} />
+          <div className="flex items-center gap-2 flex-1">
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Browse by</span>
+            <BrowseToggle mode={browseMode} onChange={setBrowseMode} />
+          </div>
+        </div>
+        {/* Tag filter */}
+        <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shrink-0">
+          <TagFilter
+            availableTags={availableTags}
+            selectedTags={selectedTags}
+            onChange={setSelectedTags}
+          />
         </div>
 
         {/* Scrollable list */}
         <div className="flex-1 min-h-0 overflow-y-auto">
-          {browseMode === 'date' ? (
+          {filteredEntries.length === 0 ? (
+            <div className="flex items-center justify-center py-8 text-gray-400 dark:text-gray-500 text-sm px-3">
+              {selectedTags.size > 0
+                ? 'No entries match the selected tags.'
+                : 'No entries available.'}
+            </div>
+          ) : browseMode === 'date' ? (
             <JournalDateBrowse
-              entries={allEntries}
+              entries={filteredEntries}
               selectedEntry={selectedEntry}
               onSelect={setSelectedEntry}
             />
           ) : (
             <JournalBookBrowse
-              bookGroups={bookGroups}
+              bookGroups={filteredBookGroups}
               selectedEntry={selectedEntry}
               onSelect={setSelectedEntry}
             />
@@ -99,9 +167,18 @@ export function JournalView({ fontFamily }: JournalViewProps) {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {selectedEntry.meta.book} {selectedEntry.meta.chapter}
                 </h2>
-                <p className="text-sm text-gray-400 dark:text-gray-500">
-                  {formatDate(selectedEntry.meta.date)}
-                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-sm text-gray-400 dark:text-gray-500">
+                    {formatDate(selectedEntry.meta.date)}
+                  </p>
+                  {selectedEntry.meta.tags && selectedEntry.meta.tags.length > 0 && (
+                    <div className="flex gap-1 flex-wrap">
+                      {selectedEntry.meta.tags.map((tag) => (
+                        <TagBadge key={tag} tag={tag} onClick={() => handleTagClick(tag)} />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => handleNavigateToReader(selectedEntry.meta.book, selectedEntry.meta.chapter)}
@@ -110,18 +187,6 @@ export function JournalView({ fontFamily }: JournalViewProps) {
                 Read {selectedEntry.meta.book} {selectedEntry.meta.chapter}
               </button>
             </div>
-
-            {selectedEntry.meta.linkedTo && (
-              <div className="mb-4 px-3 py-1.5 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 border border-amber-100 dark:border-amber-800 rounded-md">
-                In reply to{' '}
-                {formatDate(
-                  selectedEntry.meta.linkedTo
-                    .replace(/\.md$/, '')
-                    .replace(/-/g, (m, _p1, offset) => (offset > 9 ? ':' : m))
-                    .replace('T', ' ')
-                )}
-              </div>
-            )}
 
             {/* Full rendered body */}
             <div

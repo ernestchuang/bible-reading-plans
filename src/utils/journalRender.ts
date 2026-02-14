@@ -32,8 +32,35 @@ function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+/** Parse and render wikilinks: [[target]], [[target|display]], [[Book Chapter#vVerse|display]] */
+function renderWikilinks(text: string): string {
+  return text.replace(/\[\[([^\]]+)\]\]/g, (_match, content) => {
+    const parts = content.split('|');
+    const target = parts[0].trim();
+    const display = parts[1]?.trim() || target;
+
+    // Bible passage link: "Romans 8#v28"
+    if (target.match(/^[A-Z][a-zA-Z\s]+\d+#v\d+$/)) {
+      return `<a href="#bible:${target}" class="text-indigo-600 dark:text-indigo-400 hover:underline">${escapeHtml(display)}</a>`;
+    }
+
+    // Journal entry link: timestamp filename without .md
+    if (target.match(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}$/)) {
+      return `<a href="#entry:${target}" class="text-indigo-600 dark:text-indigo-400 hover:underline">${escapeHtml(display)}</a>`;
+    }
+
+    // Unknown link — render as plain text with styling
+    return `<span class="text-gray-500 dark:text-gray-400">[[${escapeHtml(display)}]]</span>`;
+  });
+}
+
 function inlineFormat(text: string): string {
-  let s = escapeHtml(text);
+  // Render wikilinks first, before escaping HTML
+  let s = renderWikilinks(text);
+  // Now escape HTML entities (but preserve wikilinks which are already rendered as HTML)
+  s = s.replace(/(?<!<[^>]*)&(?![^<]*>)/g, '&amp;');
+  s = s.replace(/(?<!<[^>]*)<(?![^<]*>)/g, '&lt;');
+  s = s.replace(/(?<!<[^>]*)>(?![^<]*>)/g, '&gt;');
   // Restore <br/> and <br> that were escaped (Milkdown serializes hard breaks as <br>)
   s = s.replace(/&lt;br\s*\/?&gt;/g, '<br/>');
   // Bold

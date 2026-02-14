@@ -11,9 +11,15 @@ export function parseFrontmatter(raw: string): {
   const [, yamlBlock, body] = match;
   const meta: Partial<JournalEntryMeta> = {};
 
-  for (const line of yamlBlock.split('\n')) {
+  const lines = yamlBlock.split('\n');
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
     const colonIdx = line.indexOf(':');
-    if (colonIdx === -1) continue;
+    if (colonIdx === -1) {
+      i++;
+      continue;
+    }
     const key = line.slice(0, colonIdx).trim();
     const value = line.slice(colonIdx + 1).trim();
     switch (key) {
@@ -26,10 +32,30 @@ export function parseFrontmatter(raw: string): {
       case 'chapter':
         meta.chapter = parseInt(value, 10);
         break;
-      case 'linkedTo':
-        meta.linkedTo = value;
+      case 'tags':
+        // Handle both inline [tag1, tag2] and list format
+        if (value.startsWith('[')) {
+          // Inline format: tags: [tag1, tag2]
+          meta.tags = value
+            .replace(/[\[\]]/g, '')
+            .split(',')
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0);
+        } else if (value === '') {
+          // List format: tags:\n  - tag1\n  - tag2
+          const tagList: string[] = [];
+          i++;
+          while (i < lines.length && lines[i].trim().startsWith('-')) {
+            const tag = lines[i].trim().slice(1).trim();
+            if (tag) tagList.push(tag);
+            i++;
+          }
+          i--; // Back up one line since the outer loop will increment
+          if (tagList.length > 0) meta.tags = tagList;
+        }
         break;
     }
+    i++;
   }
 
   return {
@@ -48,9 +74,11 @@ export function serializeFrontmatter(
     `book: ${meta.book}`,
     `chapter: ${meta.chapter}`,
   ];
-  if (meta.linkedTo) {
-    lines.push(`linkedTo: ${meta.linkedTo}`);
+
+  if (meta.tags && meta.tags.length > 0) {
+    lines.push(`tags: [${meta.tags.join(', ')}]`);
   }
+
   lines.push('---', '', body);
   return lines.join('\n');
 }

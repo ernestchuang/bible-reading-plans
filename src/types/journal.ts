@@ -2,7 +2,7 @@ export interface JournalEntryMeta {
   date: string;
   book: string;
   chapter: number;
-  linkedTo?: string;
+  tags?: string[];
 }
 
 export interface JournalEntry {

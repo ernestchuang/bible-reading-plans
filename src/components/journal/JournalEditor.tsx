@@ -4,13 +4,15 @@ import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
 import type { FontFamily, FontSize } from '../../types';
 import { getFontCss } from '../../data/fonts';
+import { TagInput } from './TagInput';
 
 interface JournalEditorProps {
-  onSave: (markdown: string) => void;
+  onSave: (markdown: string, tags: string[]) => void;
   onCancel: () => void;
-  linkedTo?: string;
+  replyTo?: string;
   fontFamily: FontFamily;
   fontSize: FontSize;
+  availableTags: string[];
 }
 
 const CHEAT_SHEET = [
@@ -28,10 +30,11 @@ const CHEAT_SHEET = [
   { syntax: '---', desc: 'Horizontal rule' },
 ];
 
-export function JournalEditor({ onSave, onCancel, linkedTo, fontFamily, fontSize }: JournalEditorProps) {
+export function JournalEditor({ onSave, onCancel, replyTo, fontFamily, fontSize, availableTags }: JournalEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const crepeRef = useRef<Crepe | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
 
   const fontCss = getFontCss(fontFamily);
 
@@ -68,17 +71,17 @@ export function JournalEditor({ onSave, onCancel, linkedTo, fontFamily, fontSize
     if (!crepeRef.current) return;
     const markdown = crepeRef.current.getMarkdown();
     if (markdown.trim()) {
-      onSave(markdown);
+      onSave(markdown, tags);
     }
-  }, [onSave]);
+  }, [onSave, tags]);
 
   return (
     <div className="flex flex-col h-full relative">
-      {linkedTo && (
+      {replyTo && (
         <div className="px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 bg-amber-50 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800">
           Replying to entry from{' '}
           <span className="font-medium text-amber-700 dark:text-amber-400">
-            {linkedTo.replace(/\.md$/, '').replace(/T/, ' ').replace(/-/g, (m, i) => i > 9 ? ':' : m)}
+            {replyTo.replace(/\.md$/, '').replace(/T/, ' ').replace(/-/g, (m, i) => i > 9 ? ':' : m)}
           </span>
         </div>
       )}
@@ -118,6 +121,10 @@ export function JournalEditor({ onSave, onCancel, linkedTo, fontFamily, fontSize
           </p>
         </div>
       )}
+
+      <div className="px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+        <TagInput tags={tags} onChange={setTags} availableTags={availableTags} />
+      </div>
 
       <div className="flex items-center justify-between px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <button
