@@ -1,9 +1,7 @@
 import { NavLink } from 'react-router-dom';
-import type { Translation, Theme } from '../types';
-import { PLANS } from '../data/plans';
+import type { Theme } from '../types';
 
-const TRANSLATIONS: Translation[] = ['NASB95', 'LSB', 'ESV', 'KJV'];
-const THEME_CYCLE: Theme[] = ['light', 'paper', 'dark', 'warm-dark', 'system'];
+const THEME_CYCLE: Theme[] = ['light', 'paper', 'dark', 'warm-dark'];
 
 const THEME_LABELS: Record<Theme, string> = {
   light: 'Light',
@@ -19,74 +17,29 @@ function getNextTheme(current: Theme): Theme {
 }
 
 interface HeaderProps {
-  translation: Translation;
-  onTranslationChange: (t: Translation) => void;
-  activePlanId: string;
-  onPlanChange: (planId: string) => void;
   theme: Theme;
   onThemeChange: (t: Theme) => void;
+  planBarOpen: boolean;
+  onTogglePlanBar: () => void;
 }
 
 export function Header({
-  translation,
-  onTranslationChange,
-  activePlanId,
-  onPlanChange,
   theme,
   onThemeChange,
+  planBarOpen,
+  onTogglePlanBar,
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 shadow dark:shadow-gray-900/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Title */}
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 shrink-0">
             Bible Reading Plan
           </h1>
 
-          {/* Plan & translation selectors + theme toggle */}
-          <div className="hidden sm:flex items-center gap-4">
-            {/* Plan selector */}
-            <div className="flex items-center gap-2">
-              <label htmlFor="header-plan" className="text-sm text-gray-500 dark:text-gray-400">
-                Plan:
-              </label>
-              <select
-                id="header-plan"
-                value={activePlanId}
-                onChange={(e) => onPlanChange(e.target.value)}
-                className="rounded-md border border-gray-300 dark:border-gray-600 px-2 py-1 text-sm text-gray-700 dark:text-gray-300 dark:bg-gray-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-              >
-                {PLANS.map((plan) => (
-                  <option key={plan.id} value={plan.id}>
-                    {plan.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Translation selector */}
-            <div className="flex items-center gap-2">
-              <label htmlFor="header-translation" className="text-sm text-gray-500 dark:text-gray-400">
-                Translation:
-              </label>
-              <select
-                id="header-translation"
-                value={translation}
-                onChange={(e) =>
-                  onTranslationChange(e.target.value as Translation)
-                }
-                className="rounded-md border border-gray-300 dark:border-gray-600 px-2 py-1 text-sm text-gray-700 dark:text-gray-300 dark:bg-gray-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-              >
-                {TRANSLATIONS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Theme toggle */}
+          {/* Theme toggle */}
+          <div className="hidden sm:flex items-center">
             <button
               type="button"
               onClick={() => onThemeChange(getNextTheme(theme))}
@@ -133,7 +86,6 @@ export function Header({
         <nav className="-mb-px flex gap-6" aria-label="Tabs">
           {([
             { to: '/read', label: 'Read' },
-            { to: '/plans', label: 'Today' },
             { to: '/plan', label: 'Full Plan' },
             { to: '/settings', label: 'Settings' },
           ] as const).map(({ to, label }) => (
@@ -151,6 +103,17 @@ export function Header({
               {label}
             </NavLink>
           ))}
+          <button
+            type="button"
+            onClick={onTogglePlanBar}
+            className={`whitespace-nowrap border-b-2 pb-3 pt-1 text-sm font-medium transition-colors ${
+              planBarOpen
+                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300'
+            }`}
+          >
+            Reading Plans
+          </button>
         </nav>
       </div>
     </header>

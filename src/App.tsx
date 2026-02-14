@@ -1,25 +1,38 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useReadingPlan } from './hooks/useReadingPlan';
 import { useBiblePreferences } from './hooks/useBiblePreferences';
 import { getReadingsForDay, generatePlan } from './utils/planGenerator';
 import { getCalendarReadingsForDay, generateCalendarPlan } from './utils/calendarPlanGenerator';
-import type { Reading, Theme } from './types';
+import type { Theme } from './types';
 import { isCalendarPlan, isCyclingPlan } from './types';
 import { Header } from './components/Header';
 import { ReadView } from './components/ReadView';
-import { DailyView } from './components/DailyView';
-import { BibleReader } from './components/BibleReader';
 import { PlanView } from './components/PlanView';
 import { SettingsPanel } from './components/SettingsPanel';
-import { JournalPane } from './components/journal/JournalPane';
 import { clearCache } from './utils/bibleCache';
+
+const PLAN_BAR_KEY = 'plan-bar-v1';
+
+function loadPlanBarOpen(): boolean {
+  try {
+    const raw = localStorage.getItem(PLAN_BAR_KEY);
+    if (raw !== null) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return true;
+}
 
 function App() {
   const state = useReadingPlan();
   const prefs = useBiblePreferences();
-  const [activeReading, setActiveReading] = useState<Reading | null>(null);
-  const [journalOpen, setJournalOpen] = useState(false);
+  const [planBarOpen, setPlanBarOpen] = useState(loadPlanBarOpen);
+
+  // Persist plan bar open/close preference
+  useEffect(() => {
+    localStorage.setItem(PLAN_BAR_KEY, JSON.stringify(planBarOpen));
+  }, [planBarOpen]);
+
+  const handleTogglePlanBar = useCallback(() => setPlanBarOpen((p) => !p), []);
 
   // Sync theme classes on <html>
   useEffect(() => {
@@ -71,78 +84,34 @@ function App() {
     );
   }, [plan, state.currentDayIndex, state.daysToGenerate, state.listOffsets]);
 
-  function handleToggleComplete(listIndex: number) {
-    // For cycling plans, clear the active reading since the offset is about to change
-    if (isCyclingPlan(plan) && activeReading && activeReading.listId === todayReadings[listIndex].listId) {
-      setActiveReading(null);
-    }
-    state.toggleReading(listIndex);
-  }
-
-  // Clear active reading when switching plans (readings change)
   function handlePlanChange(planId: string) {
-    setActiveReading(null);
     state.setActivePlanId(planId);
   }
 
   return (
     <div className="h-screen flex flex-col overflow-hidden dark:bg-gray-900">
       <Header
-        translation={prefs.translation}
-        onTranslationChange={prefs.setTranslation}
-        activePlanId={state.activePlanId}
-        onPlanChange={handlePlanChange}
         theme={prefs.theme}
         onThemeChange={prefs.setTheme}
+        planBarOpen={planBarOpen}
+        onTogglePlanBar={handleTogglePlanBar}
       />
 
       <Routes>
         <Route path="/" element={<Navigate to="/read" replace />} />
-        <Route path="/read" element={<ReadView prefs={prefs} />} />
-        <Route path="/plans" element={
-          <>
-            {/* Compact reading plan bar */}
-            <div className="shrink-0 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-              <div className="max-w-[1600px] mx-auto">
-                <DailyView
-                  readings={todayReadings}
-                  startDate={state.startDate}
-                  currentDayIndex={state.currentDayIndex}
-                  activeReading={activeReading}
-                  completedToday={state.completedToday}
-                  onSelectReading={setActiveReading}
-                  onToggleComplete={handleToggleComplete}
-                />
-              </div>
-            </div>
-
-            {/* Bible text reader + journal - fills remaining space */}
-            <div className="flex-1 min-h-0 flex flex-row">
-              <div className={journalOpen ? 'w-1/2 min-w-0 h-full' : 'w-full h-full'}>
-                <BibleReader
-                  selection={activeReading}
-                  translation={prefs.translation}
-                  displayMode={prefs.displayMode}
-                  onDisplayModeChange={prefs.setDisplayMode}
-                  fontFamily={prefs.fontFamily}
-                  fontSize={prefs.fontSize}
-                  onFontSizeChange={prefs.setFontSize}
-                  onToggleJournal={() => setJournalOpen((p) => !p)}
-                  journalOpen={journalOpen}
-                />
-              </div>
-              {journalOpen && (
-                <div className="w-1/2 min-w-0 h-full border-l border-gray-200 dark:border-gray-700">
-                  <JournalPane
-                    selection={activeReading}
-                    fontFamily={prefs.fontFamily}
-                    fontSize={prefs.fontSize}
-                  />
-                </div>
-              )}
-            </div>
-          </>
+        <Route path="/read" element={
+          <ReadView prefs={prefs} planBarOpen={planBarOpen} planData={{
+            readings: todayReadings,
+            startDate: state.startDate,
+            currentDayIndex: state.currentDayIndex,
+            completedToday: state.completedToday,
+            toggleReading: state.toggleReading,
+            isCycling: isCyclingPlan(plan),
+            activePlanId: state.activePlanId,
+            onPlanChange: handlePlanChange,
+          }} />
         } />
+        <Route path="/plans" element={<Navigate to="/read" replace />} />
         <Route path="/plan" element={
           <main className="flex-1 overflow-y-auto">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -154,6 +123,8 @@ function App() {
           <main className="flex-1 overflow-y-auto">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               <SettingsPanel
+                activePlanId={state.activePlanId}
+                onPlanChange={handlePlanChange}
                 lists={isCyclingPlan(plan) ? plan.lists : []}
                 isCalendarPlan={isCalendarPlan(plan)}
                 currentDayIndex={state.currentDayIndex}
@@ -163,6 +134,8 @@ function App() {
                 setListOffset={state.setListOffset}
                 translation={prefs.translation}
                 setTranslation={prefs.setTranslation}
+                theme={prefs.theme}
+                setTheme={prefs.setTheme}
                 daysToGenerate={state.daysToGenerate}
                 setDaysToGenerate={state.setDaysToGenerate}
                 fontFamily={prefs.fontFamily}

@@ -3,6 +3,7 @@ import type { BibleSelection, Translation, Verse, DisplayMode, FontFamily, FontS
 import { formatBibleSelection } from '../types';
 import { fetchChapterCached } from '../utils/bibleCache';
 import { getFontCss, FONT_SIZES } from '../data/fonts';
+import { getNextChapter, getPrevChapter } from '../data/bibleBooks';
 
 interface ChapterBlock {
   book: string;
@@ -20,6 +21,8 @@ interface BibleReaderProps {
   onFontSizeChange: (size: FontSize) => void;
   onToggleJournal: () => void;
   journalOpen: boolean;
+  onNavigate?: (book: string, chapter: number) => void;
+  onVisibleChapterChange?: (book: string, chapter: number) => void;
 }
 
 /** Separate any leading section heading from the verse body text. */
@@ -163,11 +166,35 @@ function ReaderView({ verses }: { verses: Verse[] }) {
   );
 }
 
-export function BibleReader({ selection, translation, displayMode, onDisplayModeChange, fontFamily, fontSize, onFontSizeChange, onToggleJournal, journalOpen }: BibleReaderProps) {
+/** Small floating chevron button for prev/next navigation */
+function NavButton({ direction, onClick, className = '' }: { direction: 'prev' | 'next'; onClick: () => void; className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`p-1.5 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-sm text-gray-400 hover:text-gray-600 hover:bg-white dark:hover:text-gray-300 dark:hover:bg-gray-800 transition-colors ${className}`}
+      aria-label={direction === 'prev' ? 'Previous chapter' : 'Next chapter'}
+      title={direction === 'prev' ? 'Previous chapter' : 'Next chapter'}
+    >
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        {direction === 'prev' ? (
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        ) : (
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        )}
+      </svg>
+    </button>
+  );
+}
+
+export function BibleReader({ selection, translation, displayMode, onDisplayModeChange, fontFamily, fontSize, onFontSizeChange, onToggleJournal, journalOpen, onNavigate, onVisibleChapterChange }: BibleReaderProps) {
   const [blocks, setBlocks] = useState<ChapterBlock[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const loadingMoreRef = useRef(false);
+  const [visibleChapter, setVisibleChapter] = useState<{ book: string; chapter: number } | null>(null);
 
   const fontCss = getFontCss(fontFamily);
   const contentStyle: React.CSSProperties = {
@@ -206,6 +233,26 @@ export function BibleReader({ selection, translation, displayMode, onDisplayMode
     }
   }, []);
 
+  // Load next chapter and append it
+  const loadNextChapter = useCallback(async () => {
+    if (loadingMoreRef.current || blocks.length === 0) return;
+    const lastBlock = blocks[blocks.length - 1];
+    const next = getNextChapter(lastBlock.book, lastBlock.chapter);
+    if (!next) return;
+
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    try {
+      const verses = await fetchChapterCached(next.book, next.chapter, translation);
+      setBlocks((prev) => [...prev, { book: next.book, chapter: next.chapter, verses }]);
+    } catch {
+      // Silently fail — user can scroll again or use next button
+    } finally {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+    }
+  }, [blocks, translation]);
+
   // Stable key for selection identity
   const selectionKey = selection
     ? `${selection.book}|${selection.chapter}|${selection.endChapter ?? ''}|${selection.startVerse ?? ''}|${selection.endVerse ?? ''}`
@@ -227,6 +274,91 @@ export function BibleReader({ selection, translation, displayMode, onDisplayMode
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectionKey, translation]);
 
+  // Initialize visibleChapter when selection changes
+  useEffect(() => {
+    if (selection) {
+      setVisibleChapter({ book: selection.book, chapter: selection.chapter });
+    } else {
+      setVisibleChapter(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectionKey]);
+
+  // IntersectionObserver to track which chapter heading is in the top portion of the scroll area
+  useEffect(() => {
+    const root = scrollRef.current;
+    if (!root || blocks.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const key = (entry.target as HTMLElement).dataset.chapterKey;
+            if (key) {
+              const sep = key.indexOf('|');
+              const book = key.slice(0, sep);
+              const chapter = parseInt(key.slice(sep + 1), 10);
+              setVisibleChapter({ book, chapter });
+            }
+          }
+        }
+      },
+      { root, rootMargin: '0px 0px -80% 0px', threshold: 0 },
+    );
+
+    root.querySelectorAll<HTMLElement>('[data-chapter-key]').forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [blocks]);
+
+  // Notify parent of visible chapter changes
+  useEffect(() => {
+    if (visibleChapter && onVisibleChapterChange) {
+      onVisibleChapterChange(visibleChapter.book, visibleChapter.chapter);
+    }
+  }, [visibleChapter, onVisibleChapterChange]);
+
+  // Continuous scroll: load next chapter when near bottom
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    function handleScroll() {
+      if (!el) return;
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      // Trigger when within 300px of the bottom
+      if (scrollHeight - scrollTop - clientHeight < 300) {
+        loadNextChapter();
+      }
+    }
+
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [loadNextChapter]);
+
+  // Navigation handlers — navigate relative to visible chapter, not original selection
+  const handlePrev = useCallback(() => {
+    const ref = visibleChapter ?? (selection ? { book: selection.book, chapter: selection.chapter } : null);
+    if (!ref) return;
+    const prev = getPrevChapter(ref.book, ref.chapter);
+    if (prev && onNavigate) {
+      onNavigate(prev.book, prev.chapter);
+    }
+  }, [visibleChapter, selection, onNavigate]);
+
+  const handleNext = useCallback(() => {
+    const ref = visibleChapter ?? (selection ? { book: selection.book, chapter: selection.chapter } : null);
+    if (!ref) return;
+    const next = getNextChapter(ref.book, ref.chapter);
+    if (next && onNavigate) {
+      onNavigate(next.book, next.chapter);
+    }
+  }, [visibleChapter, selection, onNavigate]);
+
+  const navRef = visibleChapter ?? (selection ? { book: selection.book, chapter: selection.chapter } : null);
+  const hasPrev = navRef ? getPrevChapter(navRef.book, navRef.chapter) !== null : false;
+  const hasNext = navRef ? getNextChapter(navRef.book, navRef.chapter) !== null : false;
+
   if (!selection) {
     return (
       <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-900 text-gray-400 dark:text-gray-500">
@@ -240,7 +372,7 @@ export function BibleReader({ selection, translation, displayMode, onDisplayMode
       {/* Reader toolbar */}
       <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {formatBibleSelection(selection)}
+          {visibleChapter ? `${visibleChapter.book} ${visibleChapter.chapter}` : formatBibleSelection(selection)}
           <span className="text-gray-400 dark:text-gray-500 ml-2">({translation})</span>
         </span>
         <div className="flex items-center gap-2">
@@ -257,43 +389,55 @@ export function BibleReader({ selection, translation, displayMode, onDisplayMode
         </div>
       </div>
 
-      {/* Chapter content */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
-        {loading && (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
-          </div>
-        )}
+      {/* Chapter content with floating nav buttons */}
+      <div className="flex-1 min-h-0 relative">
+        {/* Scrollable content */}
+        <div ref={scrollRef} className="h-full overflow-y-auto bg-white dark:bg-gray-900">
+          {loading && (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-gray-400 dark:text-gray-500 text-sm">Loading...</div>
+            </div>
+          )}
 
-        {error && (
-          <div className="flex flex-col items-center justify-center h-full gap-3">
-            <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
-            <button
-              onClick={() => loadSelection(selection, translation)}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
-            >
-              Retry
-            </button>
-          </div>
-        )}
+          {error && (
+            <div className="flex flex-col items-center justify-center h-full gap-3">
+              <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
+              <button
+                onClick={() => loadSelection(selection, translation)}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
-        {!loading && !error && blocks.length > 0 && (
-          <div className="max-w-3xl mx-auto px-6 py-8" style={contentStyle}>
-            {blocks.map((block, blockIdx) => (
-              <div key={`${block.book}-${block.chapter}`}>
-                <h2
-                  className={`font-semibold text-gray-900 dark:text-gray-100 mb-6 ${blockIdx > 0 ? 'mt-10 pt-6 border-t border-gray-200 dark:border-gray-700' : ''}`}
-                  style={{ fontSize: `${fontSize + 4}px` }}
-                >
-                  {block.book} {block.chapter}
-                </h2>
-                {displayMode === 'verse' && <VerseByVerseView verses={block.verses} fontSize={fontSize} />}
-                {displayMode === 'paragraph' && <ParagraphView verses={block.verses} fontSize={fontSize} />}
-                {displayMode === 'reader' && <ReaderView verses={block.verses} />}
-              </div>
-            ))}
-          </div>
-        )}
+          {!loading && !error && blocks.length > 0 && (
+            <div className="max-w-3xl mx-auto px-6 py-8" style={contentStyle}>
+              {blocks.map((block, blockIdx) => (
+                <div key={`${block.book}-${block.chapter}`} data-chapter-key={`${block.book}|${block.chapter}`}>
+                  <h2
+                    className={`font-semibold text-gray-900 dark:text-gray-100 mb-6 ${blockIdx > 0 ? 'mt-10 pt-6 border-t border-gray-200 dark:border-gray-700' : ''}`}
+                    style={{ fontSize: `${fontSize + 4}px` }}
+                  >
+                    {block.book} {block.chapter}
+                  </h2>
+                  {displayMode === 'verse' && <VerseByVerseView verses={block.verses} fontSize={fontSize} />}
+                  {displayMode === 'paragraph' && <ParagraphView verses={block.verses} fontSize={fontSize} />}
+                  {displayMode === 'reader' && <ReaderView verses={block.verses} />}
+                </div>
+              ))}
+              {loadingMore && (
+                <div className="text-center py-6 text-gray-400 dark:text-gray-500 text-sm">
+                  Loading next chapter...
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Floating nav buttons at top corners */}
+        {hasPrev && <NavButton direction="prev" onClick={handlePrev} className="absolute top-2 left-2" />}
+        {hasNext && <NavButton direction="next" onClick={handleNext} className="absolute top-2 right-2" />}
       </div>
     </div>
   );

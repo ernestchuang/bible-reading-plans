@@ -143,3 +143,27 @@ export const ALL_BIBLE_BOOKS: BibleBook[] = BIBLE_TESTAMENTS.flatMap((t) =>
 export function getChapterCount(bookName: string): number | undefined {
   return ALL_BIBLE_BOOKS.find((b) => b.name === bookName)?.chapters;
 }
+
+/** Get the next chapter reference (book + chapter), crossing book boundaries. Returns null at Revelation end. */
+export function getNextChapter(book: string, chapter: number): { book: string; chapter: number } | null {
+  const idx = ALL_BIBLE_BOOKS.findIndex((b) => b.name === book);
+  if (idx === -1) return null;
+  if (chapter < ALL_BIBLE_BOOKS[idx].chapters) {
+    return { book, chapter: chapter + 1 };
+  }
+  if (idx < ALL_BIBLE_BOOKS.length - 1) {
+    return { book: ALL_BIBLE_BOOKS[idx + 1].name, chapter: 1 };
+  }
+  return null;
+}
+
+/** Get the previous chapter reference (book + chapter), crossing book boundaries. Returns null at Genesis 1. */
+export function getPrevChapter(book: string, chapter: number): { book: string; chapter: number } | null {
+  if (chapter > 1) {
+    return { book, chapter: chapter - 1 };
+  }
+  const idx = ALL_BIBLE_BOOKS.findIndex((b) => b.name === book);
+  if (idx <= 0) return null;
+  const prevBook = ALL_BIBLE_BOOKS[idx - 1];
+  return { book: prevBook.name, chapter: prevBook.chapters };
+}

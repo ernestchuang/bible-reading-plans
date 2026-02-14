@@ -1,8 +1,19 @@
 import { useMemo, useState } from 'react';
-import type { ReadingList, Translation, FontFamily, FontSize } from '../types';
+import type { ReadingList, Translation, FontFamily, FontSize, Theme } from '../types';
 import { FONT_OPTIONS, FONT_SIZES, getFontCss } from '../data/fonts';
+import { PLANS } from '../data/plans';
+
+const THEMES: { value: Theme; label: string }[] = [
+  { value: 'light', label: 'Light' },
+  { value: 'paper', label: 'Paper' },
+  { value: 'dark', label: 'Dark' },
+  { value: 'warm-dark', label: 'Warm Dark' },
+  { value: 'system', label: 'System' },
+];
 
 interface SettingsPanelProps {
+  activePlanId: string;
+  onPlanChange: (planId: string) => void;
   lists: ReadingList[];
   isCalendarPlan: boolean;
   currentDayIndex: number;
@@ -12,6 +23,8 @@ interface SettingsPanelProps {
   setListOffset: (listIndex: number, offset: number) => void;
   translation: Translation;
   setTranslation: (t: Translation) => void;
+  theme: Theme;
+  setTheme: (t: Theme) => void;
   daysToGenerate: number;
   setDaysToGenerate: (n: number) => void;
   fontFamily: FontFamily;
@@ -57,6 +70,8 @@ const inputClasses =
 const labelClasses = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
 
 export function SettingsPanel({
+  activePlanId,
+  onPlanChange,
   lists,
   isCalendarPlan,
   currentDayIndex,
@@ -66,6 +81,8 @@ export function SettingsPanel({
   setListOffset,
   translation,
   setTranslation,
+  theme,
+  setTheme,
   daysToGenerate,
   setDaysToGenerate,
   fontFamily,
@@ -132,6 +149,25 @@ export function SettingsPanel({
 
       {/* General settings */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {/* Reading plan */}
+        <div>
+          <label htmlFor="reading-plan" className={labelClasses}>
+            Reading Plan
+          </label>
+          <select
+            id="reading-plan"
+            value={activePlanId}
+            onChange={(e) => onPlanChange(e.target.value)}
+            className={inputClasses}
+          >
+            {PLANS.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Current day — calendar plans only */}
         {isCalendarPlan && (
           <div>
@@ -209,6 +245,25 @@ export function SettingsPanel({
           Reading Appearance
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* Theme */}
+          <div>
+            <label htmlFor="theme" className={labelClasses}>
+              Theme
+            </label>
+            <select
+              id="theme"
+              value={theme}
+              onChange={(e) => setTheme(e.target.value as Theme)}
+              className={inputClasses}
+            >
+              {THEMES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Font family */}
           <div>
             <label htmlFor="font-family" className={labelClasses}>
