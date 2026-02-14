@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - Unreleased
+
 ### Added
 
+- **Configurable journal directory** — point the app at an Obsidian vault folder to integrate seamlessly
 - **Tags in frontmatter** — tag journal entries with topics like "prayer", "grace", "suffering"
   - Chip-based tag input with autocomplete suggestions from existing tags
   - Auto-normalization to lowercase-kebab-case format (e.g., "Prayer Request" → "prayer-request")
@@ -22,9 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Bible passage links: `[[Romans 8#v28|Romans 8:28]]`
   - Entry reply links: `[[2026-02-14T10-30-45]]`
   - Clickable links with indigo styling
-- **Obsidian compatibility** — tags stored in YAML frontmatter format
-  - Works natively with Obsidian's Properties panel
-  - Compatible with Obsidian's tag search and Dataview queries
+- **Obsidian-native format** — full compatibility with Obsidian vaults
+  - Tags in YAML frontmatter work with Obsidian's Properties panel
+  - Wikilinks for Bible passages and entry cross-references
+  - Compatible with Dataview queries and tag search
+  - Journal entries are plain markdown files readable in any editor
+
+### Breaking Changes
+
+- **`linkedTo` frontmatter removed** — replaced by wikilinks in entry body (no migration needed; no external user data exists)
 
 ## [1.2.0] - 2026-02-14
 
@@ -267,6 +276,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions release workflow
 
 [Unreleased]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.2.0...HEAD
+[2.0.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.2.0...HEAD
 [1.2.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0-beta.2...v1.0.0
