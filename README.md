@@ -21,7 +21,8 @@ A daily Bible reading app supporting multiple reading plans — including **Dr. 
   - Entries are tied to book and chapter, not the reading plan
   - Write-once / append-only with entry-to-entry linking (reply to a previous reflection)
   - Entries saved as individual `.md` files with YAML frontmatter
-  - Chapter view (entries for the current book/chapter) and Date view (all entries by month)
+  - **Standalone journal browser** (`/journal`) — master-detail view to browse all entries by date or by book/chapter, with links back to the reader
+  - Chapter view (entries for the current book/chapter) and Date view (all entries by month) in the split pane
   - Built-in markdown formatting guide for new users
 - **Native desktop app** for macOS, Linux, and Windows
 

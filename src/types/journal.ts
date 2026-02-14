@@ -13,3 +13,5 @@ export interface JournalEntry {
 }
 
 export type JournalViewMode = 'chapter' | 'date';
+
+export type JournalBrowseMode = 'date' | 'book';

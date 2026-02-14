@@ -10,6 +10,7 @@ import { Header } from './components/Header';
 import { ReadView } from './components/ReadView';
 import { PlanView } from './components/PlanView';
 import { SettingsPanel } from './components/SettingsPanel';
+import { JournalView } from './components/journal/JournalView';
 import { clearCache, checkCacheFreshness } from './utils/bibleCache';
 
 const PLAN_BAR_KEY = 'plan-bar-v1';
@@ -122,6 +123,11 @@ function App() {
           }} />
         } />
         <Route path="/plans" element={<Navigate to="/read" replace />} />
+        <Route path="/journal" element={
+          <main className="flex-1 overflow-hidden">
+            <JournalView fontFamily={prefs.fontFamily} />
+          </main>
+        } />
         <Route path="/plan" element={
           <main className="flex-1 overflow-y-auto">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

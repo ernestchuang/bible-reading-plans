@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-02-14
+
+### Added
+
+- **Standalone journal browsing view** (`/journal`) — browse all journal entries independently from the reader
+  - Master-detail layout: entry list on the left, full rendered entry on the right
+  - **Date mode**: entries grouped by month with preview, book/chapter, and date
+  - **Book mode**: expandable OT/NT tree organized by book and chapter
+  - Click "Read" on any entry to navigate directly to that chapter in the Bible reader
+- "Journal" tab in the header navigation between Read and Full Plan
+
+### Fixed
+
+- `<br/>` tags from Milkdown hard breaks no longer render as literal text in journal entry previews and body
+- Journal entry preview line now skips blank lines containing only `<br/>` tags
+
+### Changed
+
+- Extracted shared markdown rendering helpers (`renderMarkdown`, `formatDate`, `getPreviewLine`) into `src/utils/journalRender.ts`
+- `JournalEntryCard.onReply` is now optional (Reply button hidden when not provided)
+
 ## [1.0.0] - 2026-02-14
 
 ### Added
@@ -209,6 +230,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tauri desktop app for macOS and Linux
 - GitHub Actions release workflow
 
+[1.1.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0-beta.2...v1.0.0
 [1.0.0-beta.2]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0-beta.1...v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.9.1...v1.0.0-beta.1
