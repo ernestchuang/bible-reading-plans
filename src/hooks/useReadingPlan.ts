@@ -13,6 +13,9 @@ interface PerPlanState {
     date: string;
     lists: boolean[];
   };
+  /** @deprecated Use effectiveDayIndices instead. Kept for migration. */
+  effectiveDayIndex?: number;
+  effectiveDayIndices?: number[];
 }
 
 interface StoredState {
@@ -33,8 +36,11 @@ export interface ReadingPlanState {
   daysToGenerate: number;
   setDaysToGenerate: (n: number) => void;
   currentDayIndex: number;
+  effectiveDayIndices: number[];
+  setAllEffectiveDayIndices: (dayIndex: number) => void;
   completedToday: boolean[];
   toggleReading: (listIndex: number) => void;
+  revertDay: (listIndex: number) => void;
   resetPlan: () => void;
 }
 
@@ -126,15 +132,22 @@ function loadFromStorage(): StoredState {
       for (const plan of PLANS) {
         const saved = parsed.plans?.[plan.id];
         if (saved) {
-          // Reset completedToday if it's from a different day
+          // Reset completedToday if it's from a different day — but only for cycling plans.
+          // Calendar plans persist checkboxes until the day is fully completed.
           let completed = saved.completedToday;
-          if (!completed || completed.date !== today) {
+          if (!completed || (!isCalendarPlan(plan) && completed.date !== today)) {
             completed = { date: today, lists: Array(getListCount(plan)).fill(false) };
+          }
+          // Migrate legacy single effectiveDayIndex → per-list array
+          let dayIndices = saved.effectiveDayIndices;
+          if (!dayIndices && saved.effectiveDayIndex != null) {
+            dayIndices = Array(getListCount(plan)).fill(saved.effectiveDayIndex);
           }
           plans[plan.id] = {
             startDate: saved.startDate ?? defaults.plans[plan.id].startDate,
             listOffsets: saved.listOffsets ?? defaults.plans[plan.id].listOffsets,
             completedToday: completed,
+            effectiveDayIndices: dayIndices,
           };
         } else {
           plans[plan.id] = defaults.plans[plan.id];
@@ -169,8 +182,10 @@ export function useReadingPlan(): ReadingPlanState {
   const planState = stored.plans[activePlan.id] ?? getDefaultPlanState(activePlan);
 
   // Reset completedToday if the date has changed (e.g. user left tab open overnight)
+  // Only for cycling plans — calendar plans persist checkboxes until the day is fully completed.
   const listCount = getListCount(activePlan);
   useEffect(() => {
+    if (isCalendarPlan(activePlan)) return;
     const today = getToday();
     if (planState.completedToday.date !== today) {
       setStored((prev) => ({
@@ -187,7 +202,7 @@ export function useReadingPlan(): ReadingPlanState {
         },
       }));
     }
-  }, [planState.completedToday.date, activePlan.id, listCount]);
+  }, [planState.completedToday.date, activePlan.id, activePlan, listCount]);
 
   // Persist to localStorage
   useEffect(() => {
@@ -201,6 +216,15 @@ export function useReadingPlan(): ReadingPlanState {
     const diffMs = today.getTime() - start.getTime();
     return Math.floor(diffMs / (1000 * 60 * 60 * 24));
   }, [planState.startDate]);
+
+  // For calendar plans, each list tracks its own day index independently.
+  // For cycling plans, all indices mirror currentDayIndex (offsets handle position).
+  const effectiveDayIndices = useMemo(() => {
+    if (isCalendarPlan(activePlan)) {
+      return planState.effectiveDayIndices ?? Array(listCount).fill(currentDayIndex);
+    }
+    return Array(listCount).fill(currentDayIndex);
+  }, [activePlan, planState.effectiveDayIndices, currentDayIndex, listCount]);
 
   function setActivePlanId(id: string) {
     if (getPlanById(id)) {
@@ -246,7 +270,24 @@ export function useReadingPlan(): ReadingPlanState {
     setStored((prev) => ({ ...prev, daysToGenerate: n }));
   }
 
-  // Toggle a reading: for cycling plans, check advances the offset; for calendar plans, just toggle completion
+  function setAllEffectiveDayIndices(dayIndex: number) {
+    setStored((prev) => ({
+      ...prev,
+      plans: {
+        ...prev.plans,
+        [activePlan.id]: {
+          ...prev.plans[activePlan.id],
+          effectiveDayIndices: Array(listCount).fill(dayIndex),
+          completedToday: {
+            date: prev.plans[activePlan.id].completedToday.date,
+            lists: Array(listCount).fill(false),
+          },
+        },
+      },
+    }));
+  }
+
+  // Toggle a reading: for cycling plans, check advances the offset; for calendar plans, advance that list's day
   const toggleReading = useCallback(
     (listIndex: number) => {
       setStored((prev) => {
@@ -256,13 +297,20 @@ export function useReadingPlan(): ReadingPlanState {
         nextLists[listIndex] = !wasCompleted;
 
         if (isCalendarPlan(activePlan)) {
-          // Calendar plan: only toggle completion, no offset changes
+          // Calendar plan: check advances this list's day by 1 and resets checkbox
+          if (wasCompleted) return prev; // uncheck is a no-op (use revertDay instead)
+          const count = getListCount(activePlan);
+          const currentIndices = ps.effectiveDayIndices ?? Array(count).fill(currentDayIndex);
+          const nextIndices = [...currentIndices];
+          nextIndices[listIndex] += 1;
+          nextLists[listIndex] = false; // reset checkbox so next reading shows fresh
           return {
             ...prev,
             plans: {
               ...prev.plans,
               [activePlan.id]: {
                 ...ps,
+                effectiveDayIndices: nextIndices,
                 completedToday: { ...ps.completedToday, lists: nextLists },
               },
             },
@@ -280,6 +328,10 @@ export function useReadingPlan(): ReadingPlanState {
             (nextOffsets[listIndex] + 1) % list.totalChapters;
         }
 
+        // Auto-reset when all lists are checked: allow another round
+        const allComplete = !wasCompleted && nextLists.every(Boolean);
+        const finalLists = allComplete ? Array(nextLists.length).fill(false) : nextLists;
+
         return {
           ...prev,
           plans: {
@@ -287,13 +339,38 @@ export function useReadingPlan(): ReadingPlanState {
             [activePlan.id]: {
               ...ps,
               listOffsets: nextOffsets,
-              completedToday: { ...ps.completedToday, lists: nextLists },
+              completedToday: { ...ps.completedToday, lists: finalLists },
             },
           },
         };
       });
     },
-    [activePlan]
+    [activePlan, currentDayIndex]
+  );
+
+  // Revert a single calendar list's day by 1 (the minus button)
+  const revertDay = useCallback(
+    (listIndex: number) => {
+      if (!isCalendarPlan(activePlan)) return;
+      setStored((prev) => {
+        const ps = prev.plans[activePlan.id];
+        const count = getListCount(activePlan);
+        const currentIndices = ps.effectiveDayIndices ?? Array(count).fill(currentDayIndex);
+        const nextIndices = [...currentIndices];
+        nextIndices[listIndex] -= 1;
+        return {
+          ...prev,
+          plans: {
+            ...prev.plans,
+            [activePlan.id]: {
+              ...ps,
+              effectiveDayIndices: nextIndices,
+            },
+          },
+        };
+      });
+    },
+    [activePlan, currentDayIndex]
   );
 
   function resetPlan() {
@@ -302,7 +379,12 @@ export function useReadingPlan(): ReadingPlanState {
       ...prev,
       plans: {
         ...prev.plans,
-        [activePlan.id]: defaults.plans[activePlan.id],
+        [activePlan.id]: {
+          ...defaults.plans[activePlan.id],
+          effectiveDayIndices: isCalendarPlan(activePlan)
+            ? Array(listCount).fill(currentDayIndex)
+            : undefined,
+        },
       },
       daysToGenerate: defaults.daysToGenerate,
     }));
@@ -320,8 +402,11 @@ export function useReadingPlan(): ReadingPlanState {
     daysToGenerate: stored.daysToGenerate,
     setDaysToGenerate,
     currentDayIndex,
+    effectiveDayIndices,
+    setAllEffectiveDayIndices,
     completedToday: planState.completedToday.lists,
     toggleReading,
+    revertDay,
     resetPlan,
   };
 }

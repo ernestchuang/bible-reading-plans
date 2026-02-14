@@ -21,7 +21,8 @@ interface SettingsPanelProps {
   onPlanChange: (planId: string) => void;
   lists: ReadingList[];
   isCalendarPlan: boolean;
-  currentDayIndex: number;
+  effectiveDayIndices: number[];
+  setAllEffectiveDayIndices: (dayIndex: number) => void;
   startDate: string;
   setStartDate: (date: string) => void;
   listOffsets: number[];
@@ -80,7 +81,8 @@ export function SettingsPanel({
   onPlanChange,
   lists,
   isCalendarPlan,
-  currentDayIndex,
+  effectiveDayIndices,
+  setAllEffectiveDayIndices,
   startDate,
   setStartDate,
   listOffsets,
@@ -226,8 +228,10 @@ export function SettingsPanel({
     setListOffset(listIndex, offset);
   }
 
-  // Current M'Cheyne day (1-based)
-  const currentDay = (currentDayIndex % 365) + 1;
+  // Current M'Cheyne day (1-based) — use min of effectiveDayIndices so Settings reflects
+  // the earliest list the user is working on.
+  const minDayIndex = effectiveDayIndices.length > 0 ? Math.min(...effectiveDayIndices) : 0;
+  const currentDay = (minDayIndex % 365) + 1;
 
   function handleCurrentDayChange(day: number) {
     const clamped = Math.max(1, Math.min(day, 365));
@@ -239,6 +243,7 @@ export function SettingsPanel({
     const mm = String(newStart.getMonth() + 1).padStart(2, '0');
     const dd = String(newStart.getDate()).padStart(2, '0');
     setStartDate(`${yyyy}-${mm}-${dd}`);
+    setAllEffectiveDayIndices(clamped - 1);
   }
 
   return (

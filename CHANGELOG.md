@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-14
+
+### Added
+
+- **Per-list day tracking for M'Cheyne** — each of the 4 reading columns tracks its own day independently; checking a card advances only that column's day
+- **Per-card day number and ahead/behind badge** — each M'Cheyne card shows its current day number with a green (+N) or amber (-N) badge when ahead or behind schedule
+- **Go-back button** on M'Cheyne cards — minus button to the left of the checkbox lets you revert a column by one day if you clicked too many times
+- **Horner read-ahead** — when all 10 lists are checked, checkboxes auto-reset so you can do another round of reading in the same day
+
+### Changed
+
+- M'Cheyne plan state migrated from single `effectiveDayIndex` to per-list `effectiveDayIndices` array (automatic migration from previous format)
+- Settings "Current Day" input shows the minimum day across all lists; changing it jumps all lists to the same day
+- DailyView header "Day N" shows the minimum day across all lists (per-card badges show individual progress)
+
 ## [1.1.0] - 2026-02-14
 
 ### Added
@@ -230,6 +245,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tauri desktop app for macOS and Linux
 - GitHub Actions release workflow
 
+[1.2.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0-beta.2...v1.0.0
 [1.0.0-beta.2]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0-beta.1...v1.0.0-beta.2

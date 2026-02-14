@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useReadingPlan } from './hooks/useReadingPlan';
 import { useBiblePreferences } from './hooks/useBiblePreferences';
 import { getReadingsForDay, generatePlan } from './utils/planGenerator';
-import { getCalendarReadingsForDay, generateCalendarPlan } from './utils/calendarPlanGenerator';
+import { getCalendarReadingsPerList, generateCalendarPlan } from './utils/calendarPlanGenerator';
 import type { Theme } from './types';
 import { isCalendarPlan, isCyclingPlan } from './types';
 import { Header } from './components/Header';
@@ -72,13 +72,13 @@ function App() {
 
   const plan = state.activePlan;
 
-  // Today's readings — calendar plans look up by day index, cycling plans use offsets
+  // Today's readings — calendar plans use per-list effectiveDayIndices, cycling plans use offsets
   const todayReadings = useMemo(() => {
     if (isCalendarPlan(plan)) {
-      return getCalendarReadingsForDay(plan, state.currentDayIndex);
+      return getCalendarReadingsPerList(plan, state.effectiveDayIndices);
     }
     return getReadingsForDay(0, state.listOffsets, plan.lists);
-  }, [plan, state.currentDayIndex, state.listOffsets]);
+  }, [plan, state.effectiveDayIndices, state.listOffsets]);
 
   // Full Plan projects forward from current day
   const fullPlan = useMemo(() => {
@@ -115,9 +115,12 @@ function App() {
             readings: todayReadings,
             startDate: state.startDate,
             currentDayIndex: state.currentDayIndex,
+            effectiveDayIndices: state.effectiveDayIndices,
             completedToday: state.completedToday,
             toggleReading: state.toggleReading,
+            revertDay: state.revertDay,
             isCycling: isCyclingPlan(plan),
+            isCalendarPlan: isCalendarPlan(plan),
             activePlanId: state.activePlanId,
             onPlanChange: handlePlanChange,
           }} />
@@ -143,7 +146,8 @@ function App() {
                 onPlanChange={handlePlanChange}
                 lists={isCyclingPlan(plan) ? plan.lists : []}
                 isCalendarPlan={isCalendarPlan(plan)}
-                currentDayIndex={state.currentDayIndex}
+                effectiveDayIndices={state.effectiveDayIndices}
+                setAllEffectiveDayIndices={state.setAllEffectiveDayIndices}
                 startDate={state.startDate}
                 setStartDate={state.setStartDate}
                 listOffsets={state.listOffsets}

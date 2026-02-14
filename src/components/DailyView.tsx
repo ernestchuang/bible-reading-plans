@@ -6,10 +6,13 @@ interface DailyViewProps {
   readings: Reading[];
   startDate: string;
   currentDayIndex: number;
+  effectiveDayIndices: number[];
+  isCalendarPlan: boolean;
   activeReading: Reading | null;
   completedToday: boolean[];
   onSelectReading: (reading: Reading) => void;
   onToggleComplete: (listIndex: number) => void;
+  onRevertDay: (listIndex: number) => void;
   activePlanId?: string;
   onPlanChange?: (planId: string) => void;
 }
@@ -26,17 +29,23 @@ export function DailyView({
   readings,
   startDate,
   currentDayIndex,
+  effectiveDayIndices,
+  isCalendarPlan,
   activeReading,
   completedToday,
   onSelectReading,
   onToggleComplete,
+  onRevertDay,
   activePlanId,
   onPlanChange,
 }: DailyViewProps) {
-  const currentDate = new Date(startDate + 'T00:00:00');
-  currentDate.setDate(currentDate.getDate() + currentDayIndex);
+  // For header display, use minimum day index (the "earliest" list)
+  const minDayIndex = Math.min(...effectiveDayIndices);
 
-  const formattedDate = currentDate.toLocaleDateString('en-US', {
+  const displayDate = new Date(startDate + 'T00:00:00');
+  displayDate.setDate(displayDate.getDate() + minDayIndex);
+
+  const formattedDate = displayDate.toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -45,6 +54,9 @@ export function DailyView({
   const completedCount = completedToday.filter(Boolean).length;
   const total = readings.length;
   const colsClass = GRID_COLS[Math.min(total, 5)] ?? 'sm:grid-cols-5';
+
+  // 1-based current calendar day for per-card badge comparison
+  const calendarDay = isCalendarPlan ? (currentDayIndex % 365) + 1 : undefined;
 
   return (
     <div className="space-y-3">
@@ -65,9 +77,9 @@ export function DailyView({
               ))}
             </select>
           )}
-          <span>
-            <span className="font-bold text-gray-900 dark:text-gray-100">Day {currentDayIndex + 1}</span>
-            <span className="text-gray-500 dark:text-gray-400 ml-2">{formattedDate}</span>
+          <span className="flex items-center gap-2">
+            <span className="font-bold text-gray-900 dark:text-gray-100">Day {minDayIndex + 1}</span>
+            <span className="text-gray-500 dark:text-gray-400">{formattedDate}</span>
           </span>
         </div>
         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -88,11 +100,17 @@ export function DailyView({
               activeReading.listId === reading.listId
             }
             isCompleted={completedToday[i]}
+            dayNumber={isCalendarPlan ? (effectiveDayIndices[i] % 365) + 1 : undefined}
+            calendarDay={calendarDay}
             onClick={() => onSelectReading(reading)}
             onToggleComplete={(e) => {
               e.stopPropagation();
               onToggleComplete(i);
             }}
+            onRevertDay={isCalendarPlan ? (e) => {
+              e.stopPropagation();
+              onRevertDay(i);
+            } : undefined}
           />
         ))}
       </div>

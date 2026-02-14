@@ -11,9 +11,12 @@ export interface PlanBarData {
   readings: Reading[];
   startDate: string;
   currentDayIndex: number;
+  effectiveDayIndices: number[];
   completedToday: boolean[];
   toggleReading: (listIndex: number) => void;
+  revertDay: (listIndex: number) => void;
   isCycling: boolean;
+  isCalendarPlan: boolean;
   activePlanId: string;
   onPlanChange: (planId: string) => void;
 }
@@ -95,10 +98,13 @@ export function ReadView({ prefs, planData, planBarOpen }: ReadViewProps) {
               readings={planData.readings}
               startDate={planData.startDate}
               currentDayIndex={planData.currentDayIndex}
+              effectiveDayIndices={planData.effectiveDayIndices}
+              isCalendarPlan={planData.isCalendarPlan}
               activeReading={planReading}
               completedToday={planData.completedToday}
               onSelectReading={handleSelectReading}
               onToggleComplete={handleToggleComplete}
+              onRevertDay={planData.revertDay}
               activePlanId={planData.activePlanId}
               onPlanChange={planData.onPlanChange}
             />

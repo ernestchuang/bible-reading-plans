@@ -9,6 +9,17 @@ export function getCalendarReadingsForDay(
   return plan.calendar[wrapped].readings;
 }
 
+/** Get one reading per list, each at its own day index. Wraps at 365. */
+export function getCalendarReadingsPerList(
+  plan: CalendarReadingPlan,
+  dayIndices: number[]
+): Reading[] {
+  return dayIndices.map((dayIndex, listIndex) => {
+    const wrapped = ((dayIndex % 365) + 365) % 365;
+    return plan.calendar[wrapped].readings[listIndex];
+  });
+}
+
 /** Generate N days of a calendar plan starting from the given day index. */
 export function generateCalendarPlan(
   plan: CalendarReadingPlan,
