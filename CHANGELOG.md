@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-beta.2] - 2026-02-14
+
+### Added
+
+- **Collapsible reading plan bar** on the reader view — toggle via "Reading Plans" tab to see today's readings above the Bible text
+- **Continuous scroll** — scroll to the bottom to auto-load the next chapter seamlessly
+- **Visible chapter tracking** — toolbar, BibleBrowser, and journal pane update as you scroll through chapters
+- **Floating chapter navigation** — small prev/next buttons at the top corners of the reading pane
+- Plan selector dropdown in the plan bar and Settings
+- Theme dropdown in Settings (Reading Appearance section)
+
+### Changed
+
+- Header simplified and left-justified; plan and translation selectors moved to plan bar and Settings
+- Theme cycle button skips "System" option (still available in Settings dropdown)
+- `/plans` route removed — "Reading Plans" is now a toggle on the reader view
+- Navigation tabs: Read, Full Plan, Settings, Reading Plans (toggle)
+
 ## [1.0.0-beta.1] - 2026-02-13
 
 ### Added
@@ -180,6 +198,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tauri desktop app for macOS and Linux
 - GitHub Actions release workflow
 
+[1.0.0-beta.2]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0-beta.1...v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.9.1...v1.0.0-beta.1
 [0.9.1]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v0.8.0...v0.9.0

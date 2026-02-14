@@ -4,15 +4,17 @@ A daily Bible reading app supporting multiple reading plans — including **Dr. 
 
 ## Features
 
-- **Multiple reading plans** — switch between Horner's (10 cycling lists) and M'Cheyne's (365-day calendar) via a header dropdown
+- **Bible reader as default view** — open the app and start reading any chapter immediately via the BibleBrowser bar
+- **Continuous scroll** — scroll to the bottom to seamlessly load the next chapter; visible chapter tracked in the toolbar, browser, and journal
+- **Multiple reading plans** — switch between Horner's (10 cycling lists) and M'Cheyne's (365-day calendar) via the collapsible plan bar or Settings
 - **Color-coded reading lists** with check-off tracking
-- **Native Bible reader** — click a chapter to read it inline with verse numbers, powered by the Bolls Life API (NASB95, LSB, ESV, KJV)
+- **Native Bible reader** — verse numbers, powered by the Bolls Life API (NASB95, LSB, ESV, KJV)
 - **Display modes** — verse-by-verse, paragraph, and reader's layout (LSB includes poetry formatting)
-- **Dark mode** — three-way toggle (Light / Dark / System) that follows your OS preference
+- **Themes** — Light, Paper, Dark, Warm Dark, and System — cycle in the header or pick from Settings
 - **Carry-over system** — unchecked readings stay for the next day
 - **Progress tracking** — completion state resets daily, list positions persist
 - **Markdown export** and print-friendly layout
-- **Settings** — adjust any list's starting position, start date, and translation
+- **Settings** — adjust any list's starting position, start date, translation, font, and theme
 - **Journal** — write reflections alongside your reading with a split-pane WYSIWYG markdown editor
   - Entries are tied to book and chapter, not the reading plan
   - Write-once / append-only with entry-to-entry linking (reply to a previous reflection)
