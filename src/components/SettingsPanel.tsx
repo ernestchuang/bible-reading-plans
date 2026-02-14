@@ -7,6 +7,15 @@ import {
   downloadEntireBible,
   TOTAL_CHAPTERS,
 } from '../utils/bibleCache';
+import { open } from '@tauri-apps/plugin-dialog';
+import { appDataDir } from '@tauri-apps/api/path';
+import {
+  getJournalDir,
+  setJournalDir,
+  clearJournalDir,
+  migrateEntries,
+  listAllEntries,
+} from '../utils/journalFs';
 
 const THEMES: { value: Theme; label: string }[] = [
   { value: 'light', label: 'Light' },
@@ -104,6 +113,76 @@ export function SettingsPanel({
 }: SettingsPanelProps) {
   const [cacheClearing, setCacheClearing] = useState(false);
   const [cacheCleared, setCacheCleared] = useState(false);
+
+  // Journal directory state
+  const [journalDir, setJournalDirState] = useState<string | null>(getJournalDir);
+  const [defaultDir, setDefaultDir] = useState<string>('');
+  const [migrationPrompt, setMigrationPrompt] = useState<{ count: number; targetDir: string } | null>(null);
+  const [migrating, setMigrating] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<string | null>(null);
+  const [journalError, setJournalError] = useState<string | null>(null);
+
+  // Resolve default AppData journal path on mount
+  useEffect(() => {
+    appDataDir().then((dir) => setDefaultDir(`${dir}journal`));
+  }, []);
+
+  async function handleChooseJournalDir() {
+    setJournalError(null);
+    setMigrationResult(null);
+    const selected = await open({ directory: true, multiple: false });
+    if (!selected) return; // user cancelled
+
+    // Check if existing entries exist in default AppData location
+    const oldDir = getJournalDir();
+    // Temporarily clear custom dir so listAllEntries reads from AppData
+    if (oldDir) clearJournalDir();
+    let existingCount = 0;
+    try {
+      const entries = await listAllEntries();
+      existingCount = entries.length;
+    } catch {
+      // ignore — no entries in default location
+    }
+    // Restore old dir if it was set (we haven't committed the change yet)
+    if (oldDir) setJournalDir(oldDir);
+
+    // Save the new dir
+    setJournalDir(selected);
+    setJournalDirState(selected);
+
+    if (existingCount > 0) {
+      setMigrationPrompt({ count: existingCount, targetDir: selected });
+    }
+  }
+
+  async function handleMigrate() {
+    if (!migrationPrompt) return;
+    setMigrating(true);
+    setJournalError(null);
+    try {
+      const moved = await migrateEntries(migrationPrompt.targetDir);
+      setMigrationResult(`Moved ${moved} ${moved === 1 ? 'entry' : 'entries'} successfully.`);
+      setTimeout(() => setMigrationResult(null), 4000);
+    } catch (err) {
+      setJournalError(`Migration failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setMigrating(false);
+      setMigrationPrompt(null);
+    }
+  }
+
+  function handleSkipMigration() {
+    setMigrationPrompt(null);
+  }
+
+  function handleResetJournalDir() {
+    clearJournalDir();
+    setJournalDirState(null);
+    setMigrationPrompt(null);
+    setMigrationResult(null);
+    setJournalError(null);
+  }
 
   // Bible download state — per translation, concurrent
   const [cachedCounts, setCachedCounts] = useState<Record<string, number | null>>(
@@ -420,6 +499,86 @@ export function SettingsPanel({
             In the beginning God created the heavens and the earth. The earth was
             formless and void, and darkness was over the surface of the deep.
           </p>
+        </div>
+      </div>
+
+      {/* Journal directory */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Journal
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Choose where journal entries are stored. Point this at an Obsidian vault
+          folder to browse your reflections in Obsidian.
+        </p>
+
+        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-3">
+          <div>
+            <label className={labelClasses}>Journal Directory</label>
+            <p className="text-sm text-gray-600 dark:text-gray-400 break-all">
+              {journalDir ?? (defaultDir || 'Loading...')}
+              {!journalDir && defaultDir && (
+                <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">(default)</span>
+              )}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={handleChooseJournalDir}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-700 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+            >
+              Choose Folder
+            </button>
+            {journalDir && (
+              <button
+                type="button"
+                onClick={handleResetJournalDir}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Reset to Default
+              </button>
+            )}
+          </div>
+
+          {/* Migration prompt */}
+          {migrationPrompt && (
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-md">
+              <p className="text-sm text-amber-800 dark:text-amber-200 mb-2">
+                Found {migrationPrompt.count} existing {migrationPrompt.count === 1 ? 'entry' : 'entries'} in
+                the default location. Move them to the new folder?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleMigrate}
+                  disabled={migrating}
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700 transition-colors disabled:opacity-50"
+                >
+                  {migrating ? 'Moving...' : 'Move'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSkipMigration}
+                  disabled={migrating}
+                  className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                >
+                  Skip
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Migration result */}
+          {migrationResult && (
+            <p className="text-sm text-green-600 dark:text-green-400">{migrationResult}</p>
+          )}
+
+          {/* Error display */}
+          {journalError && (
+            <p className="text-sm text-red-600 dark:text-red-400">{journalError}</p>
+          )}
         </div>
       </div>
 
