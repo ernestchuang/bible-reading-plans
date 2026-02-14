@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Tags in frontmatter** — tag journal entries with topics like "prayer", "grace", "suffering"
+  - Chip-based tag input with autocomplete suggestions from existing tags
+  - Auto-normalization to lowercase-kebab-case format (e.g., "Prayer Request" → "prayer-request")
+  - Tags displayed as colored badges on entry cards
+  - Click any tag badge to instantly filter by that tag
+- **Tag filtering** — multi-select dropdown filter with AND logic (entries must have ALL selected tags)
+  - Filter works across all journal views (chapter, date, browse)
+  - Visual indication of active filters with tag chips and count badge
+  - "Clear all" button to reset filters
+- **Wikilink rendering** in journal entries
+  - Bible passage links: `[[Romans 8#v28|Romans 8:28]]`
+  - Entry reply links: `[[2026-02-14T10-30-45]]`
+  - Clickable links with indigo styling
+- **Obsidian compatibility** — tags stored in YAML frontmatter format
+  - Works natively with Obsidian's Properties panel
+  - Compatible with Obsidian's tag search and Dataview queries
+
 ## [1.2.0] - 2026-02-14
 
 ### Added
@@ -245,6 +266,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tauri desktop app for macOS and Linux
 - GitHub Actions release workflow
 
+[Unreleased]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.2.0...HEAD
 [1.2.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0-beta.2...v1.0.0
