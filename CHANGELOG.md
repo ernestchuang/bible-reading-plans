@@ -7,10 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0] - Unreleased
+## [2.0.0] - 2026-02-14
 
 ### Added
 
+- **Bible Vault Scaffolding** — generate complete Obsidian-compatible Bible reference vault (1,256 files)
+  - 1,189 chapter stub files with verse previews (first 60 chars), navigation wikilinks, and Dataview queries
+  - 66 book index files with chapter links and reflection aggregation queries
+  - 1 master Bible index with testament/section organization and powerful Dataview queries
+  - "Generate Bible Vault" button in Settings → Journal with real-time progress bar
+  - Unified structure: vault and journal entries co-located in same `journal/` folder hierarchy
+  - Clean wikilinks: `[[Genesis/1]]` instead of `[[Bible/Genesis/1]]`
+  - Uses cached Bible data when available, falls back to API (10-15 seconds cached, 4-5 minutes uncached)
 - **Configurable journal directory** — point the app at an Obsidian vault folder to integrate seamlessly
 - **Tags in frontmatter** — tag journal entries with topics like "prayer", "grace", "suffering"
   - Chip-based tag input with autocomplete suggestions from existing tags
@@ -25,15 +33,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Bible passage links: `[[Romans 8#v28|Romans 8:28]]`
   - Entry reply links: `[[2026-02-14T10-30-45]]`
   - Clickable links with indigo styling
+  - Wikilinks preserved correctly (Milkdown escape sequences removed on save)
 - **Obsidian-native format** — full compatibility with Obsidian vaults
   - Tags in YAML frontmatter work with Obsidian's Properties panel
   - Wikilinks for Bible passages and entry cross-references
   - Compatible with Dataview queries and tag search
   - Journal entries are plain markdown files readable in any editor
+  - Bible vault provides reference stubs for graph view and backlinks
+
+### Fixed
+
+- Journal directory path resolution now uses `getJournalDir()` + `appDataDir()` directly instead of stale state variables
+- Journal entries and Bible vault now properly co-located in unified `journal/` subdirectory structure
+- Wikilinks in journal entries no longer escaped — `[[link]]` saves correctly instead of `\[\[link\]\]`
 
 ### Breaking Changes
 
 - **`linkedTo` frontmatter removed** — replaced by wikilinks in entry body (no migration needed; no external user data exists)
+- **Journal structure unified** — journal entries now at `{CustomDir}/journal/{book}/{chapter}/` instead of `{CustomDir}/{book}/{chapter}/`
+  - Migration: Move existing book folders into `journal/` subdirectory if using custom directory
 
 ## [1.2.0] - 2026-02-14
 
@@ -275,8 +293,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tauri desktop app for macOS and Linux
 - GitHub Actions release workflow
 
-[Unreleased]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.2.0...HEAD
-[2.0.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/ernestchuang/bible-reading-plans/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/ernestchuang/bible-reading-plans/compare/v1.0.0-beta.2...v1.0.0

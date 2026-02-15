@@ -16,6 +16,7 @@ import {
   migrateEntries,
   listAllEntries,
 } from '../utils/journalFs';
+import { generateBibleVault } from '../utils/vaultGenerator';
 
 const THEMES: { value: Theme; label: string }[] = [
   { value: 'light', label: 'Light' },
@@ -122,6 +123,11 @@ export function SettingsPanel({
   const [migrationResult, setMigrationResult] = useState<string | null>(null);
   const [journalError, setJournalError] = useState<string | null>(null);
 
+  // Bible vault generation state
+  const [isGeneratingVault, setIsGeneratingVault] = useState(false);
+  const [vaultProgress, setVaultProgress] = useState({ current: 0, total: 0, message: '' });
+  const [vaultError, setVaultError] = useState<string | null>(null);
+
   // Resolve default AppData journal path on mount
   useEffect(() => {
     appDataDir().then((dir) => setDefaultDir(`${dir}journal`));
@@ -182,6 +188,31 @@ export function SettingsPanel({
     setMigrationPrompt(null);
     setMigrationResult(null);
     setJournalError(null);
+  }
+
+  async function handleGenerateVault() {
+    // Get the custom journal directory, or fall back to AppData default
+    const customDir = getJournalDir();
+    const journalDirPath = customDir || (await appDataDir()) + 'journal';
+
+    setIsGeneratingVault(true);
+    setVaultError(null);
+    try {
+      await generateBibleVault({
+        journalDir: journalDirPath,
+        translation,
+        onProgress: (current, total, message) => {
+          setVaultProgress({ current, total, message });
+        },
+      });
+      setMigrationResult('Bible vault generated successfully!');
+      setTimeout(() => setMigrationResult(null), 4000);
+    } catch (err) {
+      setVaultError(`Error generating vault: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setIsGeneratingVault(false);
+      setVaultProgress({ current: 0, total: 0, message: '' });
+    }
   }
 
   // Bible download state — per translation, concurrent
@@ -578,6 +609,46 @@ export function SettingsPanel({
           {/* Error display */}
           {journalError && (
             <p className="text-sm text-red-600 dark:text-red-400">{journalError}</p>
+          )}
+        </div>
+
+        {/* Bible Vault Generation */}
+        <div className="mt-6">
+          <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            Bible Vault
+          </h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            Generate Bible reference files for Obsidian. Creates 1,189 chapter stubs,
+            66 book indexes, and a master Bible index with Dataview queries.
+          </p>
+
+          <button
+            onClick={handleGenerateVault}
+            disabled={isGeneratingVault}
+            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isGeneratingVault ? 'Generating...' : 'Generate Bible Vault'}
+          </button>
+
+          {/* Progress bar */}
+          {isGeneratingVault && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                <span>{vaultProgress.message}</span>
+                <span>{vaultProgress.current} / {vaultProgress.total}</span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div
+                  className="bg-indigo-600 dark:bg-indigo-500 h-2 rounded-full transition-all duration-200"
+                  style={{ width: `${vaultProgress.total > 0 ? (vaultProgress.current / vaultProgress.total) * 100 : 0}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Vault error */}
+          {vaultError && (
+            <p className="text-sm text-red-600 dark:text-red-400 mt-2">{vaultError}</p>
           )}
         </div>
       </div>

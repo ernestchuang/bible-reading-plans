@@ -69,7 +69,12 @@ export function JournalEditor({ onSave, onCancel, replyTo, fontFamily, fontSize,
 
   const handleSave = useCallback(() => {
     if (!crepeRef.current) return;
-    const markdown = crepeRef.current.getMarkdown();
+    let markdown = crepeRef.current.getMarkdown();
+
+    // Unescape wikilinks: Milkdown escapes [[ ]] as \[\[ \]\]
+    // We need to preserve them for Obsidian compatibility
+    markdown = markdown.replace(/\\\[/g, '[').replace(/\\\]/g, ']');
+
     if (markdown.trim()) {
       onSave(markdown, tags);
     }

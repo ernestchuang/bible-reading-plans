@@ -30,12 +30,13 @@ export function clearJournalDir(): void {
  * Build FS options for a relative path under the journal root.
  * - If no custom dir is set, uses AppData base directory.
  * - If a custom dir is set, builds an absolute path (no baseDir).
+ * - Always uses 'journal/' subdirectory to separate from Bible vault.
  */
 function resolvePath(relativePath: string): { path: string; options: { baseDir?: BaseDirectory } } {
   const customDir = getJournalDir();
   if (customDir) {
     return {
-      path: `${customDir}/${relativePath}`,
+      path: `${customDir}/${JOURNAL_ROOT}/${relativePath}`,
       options: {},
     };
   }
@@ -49,7 +50,7 @@ function resolvePath(relativePath: string): { path: string; options: { baseDir?:
 function resolveRoot(): { path: string; options: { baseDir?: BaseDirectory } } {
   const customDir = getJournalDir();
   if (customDir) {
-    return { path: customDir, options: {} };
+    return { path: `${customDir}/${JOURNAL_ROOT}`, options: {} };
   }
   return { path: JOURNAL_ROOT, options: { baseDir: BaseDirectory.AppData } };
 }
