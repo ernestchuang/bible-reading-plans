@@ -16,6 +16,36 @@ function stripBr(s: string): string {
   return s.replace(/<br\s*\/?>/gi, '').trim();
 }
 
+/** Strip auto-inserted lines (chapter wikilink and reply) from journal body for display. */
+export function stripAutoInsertedLines(markdown: string): string {
+  const lines = markdown.split('\n');
+  const filtered: string[] = [];
+  let skipNext = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Skip chapter wikilink line (e.g., "[[01-Genesis/001]]")
+    if (trimmed.match(/^\[\[\d{2}-.+?\/\d{3}\]\]$/)) continue;
+
+    // Skip reply line (e.g., "> In reply to [[...]]")
+    if (trimmed.match(/^>\s*In reply to \[\[.+?\]\]$/)) {
+      skipNext = true; // Also skip the blank line after reply
+      continue;
+    }
+
+    // Skip blank line after reply
+    if (skipNext && !trimmed) {
+      skipNext = false;
+      continue;
+    }
+
+    filtered.push(line);
+  }
+
+  return filtered.join('\n');
+}
+
 /** Extract the first heading, or the first non-empty line if no heading exists. Skips wikilink-only lines. */
 export function getPreviewLine(markdown: string): string {
   for (const line of markdown.split('\n')) {

@@ -7,7 +7,7 @@ import { useJournalBrowser } from '../../hooks/useJournalBrowser';
 import { useAvailableTags } from '../../hooks/useAvailableTags';
 import { matchesTags } from '../../utils/tagUtils';
 import { getFontCss } from '../../data/fonts';
-import { formatDate, renderMarkdown } from '../../utils/journalRender';
+import { formatDate, renderMarkdown, stripAutoInsertedLines } from '../../utils/journalRender';
 import { JournalDateBrowse } from './JournalDateBrowse';
 import { JournalBookBrowse } from './JournalBookBrowse';
 import { TagFilter } from './TagFilter';
@@ -192,7 +192,7 @@ export function JournalView({ fontFamily }: JournalViewProps) {
             <div
               className="text-base text-gray-800 dark:text-gray-200 space-y-1 leading-relaxed"
               style={{ fontFamily: fontCss }}
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedEntry.body) }}
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(stripAutoInsertedLines(selectedEntry.body)) }}
             />
           </div>
         ) : (

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { JournalEntry } from '../../types/journal';
 import type { FontFamily } from '../../types';
 import { getFontCss } from '../../data/fonts';
-import { formatDate, getPreviewLine, renderMarkdown } from '../../utils/journalRender';
+import { formatDate, getPreviewLine, renderMarkdown, stripAutoInsertedLines } from '../../utils/journalRender';
 import { TagBadge } from './TagBadge';
 
 interface JournalEntryCardProps {
@@ -63,7 +63,7 @@ export function JournalEntryCard({ entry, onReply, onTagClick, fontFamily }: Jou
         <div
           className="px-3 pb-3 pt-1 border-t border-gray-100 dark:border-gray-700 text-sm text-gray-800 dark:text-gray-200 space-y-1"
           style={{ fontFamily: fontCss }}
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(entry.body) }}
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(stripAutoInsertedLines(entry.body)) }}
         />
       )}
     </div>
