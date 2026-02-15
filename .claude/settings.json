@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ICONS=\"/home/ernest/git/github/ernestchuang/bible-reading-plans/src-tauri/icons\")",
+      "Bash(convert:*)"
+    ]
+  }
+}

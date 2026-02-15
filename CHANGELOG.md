@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-02-15
+
+### Added
+
+- **Book numbering for biblical order** — all books prefixed with 01-66 so they sort Genesis → Revelation (not Acts → Zechariah)
+  - Chapter folders: `01-Genesis/001/`, `40-Matthew/028/`, `66-Revelation/022/`
+  - Zero-padded chapters (001, 002, ..., 150) for proper sorting
+- **Automatic chapter wikilinks** — every journal entry includes `[[{bookNum}-{bookName}/{chapterPadded}]]` at the top
+  - Example: `[[01-Genesis/001]]` links to chapter note (created on-demand when user clicks in Obsidian)
+  - Wikilinks create connections for Obsidian graph view, backlinks, and navigation
+  - Purple styling distinguishes chapter links from other wikilink types
+
+### Changed
+
+- **Flat journal structure** — all journal entries now in single `journal/` directory (chronological, not nested)
+  - Old: `journal/Genesis/1/2026-02-14T12-00-00.md` (nested by book/chapter)
+  - New: `journal/2026-02-14T12-00-00.md` (flat, frontmatter specifies book/chapter)
+  - Chapter notes organized separately: `journal/01-Genesis/001.md` (on-demand)
+  - Simpler mental model: entries are chronological stream, Obsidian handles organization via wikilinks + Dataview
+
+### Removed
+
+- **Bible vault generation** — no more pre-generated 1,256 stub files; chapter notes grow organically
+  - Removed "Generate Bible Vault" button from Settings
+  - Removed `vaultGenerator.ts` and all vault scaffolding code
+  - Users create chapter notes on-demand by clicking wikilinks in Obsidian (empty files or templates)
+  - Addresses issue #26: vault was too complicated without actual study content
+
+### Breaking Changes
+
+- **Journal directory structure changed** — entries moved from nested to flat layout
+  - Migration: App handles both old nested and new flat structures automatically
+  - Existing entries in nested format will be migrated when you change journal directory or can be manually moved
+  - No data loss: all entries preserved, only file paths change
+- **Chapter notes format changed** — now use book numbers (`01-Genesis/001.md` instead of `Genesis/1.md`)
+  - Old chapter notes won't be recognized; regenerate by clicking wikilinks in Obsidian as needed
+
 ## [2.0.0] - 2026-02-14
 
 ### Added

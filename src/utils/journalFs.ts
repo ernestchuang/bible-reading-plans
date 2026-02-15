@@ -55,12 +55,9 @@ function resolveRoot(): { path: string; options: { baseDir?: BaseDirectory } } {
   return { path: JOURNAL_ROOT, options: { baseDir: BaseDirectory.AppData } };
 }
 
-export async function ensureJournalDir(
-  book: string,
-  chapter: number
-): Promise<string> {
-  const rel = `${book}/${chapter}`;
-  const { path, options } = resolvePath(rel);
+/** Ensure the journal root directory exists. */
+export async function ensureJournalDir(): Promise<string> {
+  const { path, options } = resolveRoot();
   const dirExists = await exists(path, options);
   if (!dirExists) {
     await mkdir(path, { ...options, recursive: true });
@@ -68,44 +65,71 @@ export async function ensureJournalDir(
   return path;
 }
 
+/**
+ * List all journal entry filenames for a specific book/chapter.
+ * Reads all entries and filters by frontmatter.
+ */
 export async function listEntryFiles(
   book: string,
   chapter: number
 ): Promise<string[]> {
-  const rel = `${book}/${chapter}`;
-  const { path, options } = resolvePath(rel);
-  const dirExists = await exists(path, options);
-  if (!dirExists) return [];
-  const entries = await readDir(path, options);
-  return entries
-    .filter((e) => e.isFile && e.name?.endsWith('.md'))
-    .map((e) => e.name!)
-    .sort()
-    .reverse(); // newest first
+  const { path: rootPath, options } = resolveRoot();
+  const rootExists = await exists(rootPath, options);
+  if (!rootExists) return [];
+
+  const entries = await readDir(rootPath, options);
+  const matchingFiles: string[] = [];
+
+  for (const entry of entries) {
+    if (!entry.isFile || !entry.name?.endsWith('.md')) continue;
+    // Skip chapter note files (they have book prefix format)
+    if (entry.name.match(/^\d{2}-/)) continue;
+
+    // Read frontmatter to check book/chapter
+    try {
+      const content = await readTextFile(`${rootPath}/${entry.name}`, options);
+      const metaMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      if (metaMatch) {
+        const yaml = metaMatch[1];
+        const bookMatch = yaml.match(/^book:\s*(.+)$/m);
+        const chapterMatch = yaml.match(/^chapter:\s*(\d+)$/m);
+        if (bookMatch && chapterMatch) {
+          const entryBook = bookMatch[1].trim();
+          const entryChapter = parseInt(chapterMatch[1], 10);
+          if (entryBook === book && entryChapter === chapter) {
+            matchingFiles.push(entry.name);
+          }
+        }
+      }
+    } catch {
+      // Skip files that can't be read
+      continue;
+    }
+  }
+
+  return matchingFiles.sort().reverse(); // newest first
 }
 
 export async function readEntryFile(
-  book: string,
-  chapter: number,
   filename: string
 ): Promise<string> {
-  const rel = `${book}/${chapter}/${filename}`;
-  const { path, options } = resolvePath(rel);
+  const { path, options } = resolvePath(filename);
   return readTextFile(path, options);
 }
 
 export async function writeEntryFile(
-  book: string,
-  chapter: number,
   filename: string,
   content: string
 ): Promise<void> {
-  await ensureJournalDir(book, chapter);
-  const rel = `${book}/${chapter}/${filename}`;
-  const { path, options } = resolvePath(rel);
+  await ensureJournalDir();
+  const { path, options } = resolvePath(filename);
   await writeTextFile(path, content, options);
 }
 
+/**
+ * List all journal entries in the flat directory structure.
+ * Parses frontmatter to extract book and chapter.
+ */
 export async function listAllEntries(): Promise<
   { book: string; chapter: number; filename: string }[]
 > {
@@ -114,27 +138,30 @@ export async function listAllEntries(): Promise<
   if (!rootExists) return [];
 
   const results: { book: string; chapter: number; filename: string }[] = [];
-  const bookDirs = await readDir(rootPath, options);
+  const entries = await readDir(rootPath, options);
 
-  for (const bookDir of bookDirs) {
-    if (!bookDir.isDirectory || !bookDir.name) continue;
-    const book = bookDir.name;
-    const { path: bookPath, options: bookOpts } = resolvePath(book);
-    const chapterDirs = await readDir(bookPath, bookOpts);
+  for (const entry of entries) {
+    if (!entry.isFile || !entry.name?.endsWith('.md')) continue;
+    // Skip chapter note files (they have book prefix format)
+    if (entry.name.match(/^\d{2}-/)) continue;
 
-    for (const chapterDir of chapterDirs) {
-      if (!chapterDir.isDirectory || !chapterDir.name) continue;
-      const chapter = parseInt(chapterDir.name, 10);
-      if (isNaN(chapter)) continue;
-
-      const { path: chPath, options: chOpts } = resolvePath(`${book}/${chapter}`);
-      const files = await readDir(chPath, chOpts);
-
-      for (const file of files) {
-        if (file.isFile && file.name?.endsWith('.md')) {
-          results.push({ book, chapter, filename: file.name });
+    // Read frontmatter to extract book/chapter
+    try {
+      const content = await readTextFile(`${rootPath}/${entry.name}`, options);
+      const metaMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      if (metaMatch) {
+        const yaml = metaMatch[1];
+        const bookMatch = yaml.match(/^book:\s*(.+)$/m);
+        const chapterMatch = yaml.match(/^chapter:\s*(\d+)$/m);
+        if (bookMatch && chapterMatch) {
+          const book = bookMatch[1].trim();
+          const chapter = parseInt(chapterMatch[1], 10);
+          results.push({ book, chapter, filename: entry.name });
         }
       }
+    } catch {
+      // Skip files that can't be read or parsed
+      continue;
     }
   }
 
@@ -143,6 +170,7 @@ export async function listAllEntries(): Promise<
 
 /**
  * Migrate all journal entries from the default AppData location to a target directory.
+ * Handles both old nested structure and flat structure.
  * Returns the number of files moved.
  */
 export async function migrateEntries(targetDir: string): Promise<number> {
@@ -153,39 +181,60 @@ export async function migrateEntries(targetDir: string): Promise<number> {
   if (!rootExists) return 0;
 
   let count = 0;
-  const bookDirs = await readDir(defaultRoot, defaultOptions);
+  const entries = await readDir(defaultRoot, defaultOptions);
 
-  for (const bookDir of bookDirs) {
-    if (!bookDir.isDirectory || !bookDir.name) continue;
-    const book = bookDir.name;
-    const chapterDirs = await readDir(`${defaultRoot}/${book}`, defaultOptions);
+  for (const entry of entries) {
+    // Handle nested directory structure (old format)
+    if (entry.isDirectory && entry.name) {
+      const bookDirName = entry.name;
+      const chapterDirs = await readDir(`${defaultRoot}/${bookDirName}`, defaultOptions);
 
-    for (const chapterDir of chapterDirs) {
-      if (!chapterDir.isDirectory || !chapterDir.name) continue;
-      const chapter = chapterDir.name;
-      const files = await readDir(`${defaultRoot}/${book}/${chapter}`, defaultOptions);
+      for (const chapterDir of chapterDirs) {
+        if (!chapterDir.isDirectory || !chapterDir.name) continue;
+        const files = await readDir(`${defaultRoot}/${bookDirName}/${chapterDir.name}`, defaultOptions);
 
-      for (const file of files) {
-        if (!file.isFile || !file.name?.endsWith('.md')) continue;
+        for (const file of files) {
+          if (!file.isFile || !file.name?.endsWith('.md')) continue;
 
-        // Read from default location
-        const content = await readTextFile(
-          `${defaultRoot}/${book}/${chapter}/${file.name}`,
-          defaultOptions
-        );
+          // Read from nested location
+          const content = await readTextFile(
+            `${defaultRoot}/${bookDirName}/${chapterDir.name}/${file.name}`,
+            defaultOptions
+          );
 
-        // Write to target location
-        const targetPath = `${targetDir}/${book}/${chapter}`;
-        const targetExists = await exists(targetPath);
-        if (!targetExists) {
-          await mkdir(targetPath, { recursive: true });
+          // Write to target flat structure
+          const targetPath = `${targetDir}/${JOURNAL_ROOT}`;
+          const targetExists = await exists(targetPath);
+          if (!targetExists) {
+            await mkdir(targetPath, { recursive: true });
+          }
+          await writeTextFile(`${targetPath}/${file.name}`, content);
+
+          // Remove from default location
+          await remove(`${defaultRoot}/${bookDirName}/${chapterDir.name}/${file.name}`, defaultOptions);
+          count++;
         }
-        await writeTextFile(`${targetPath}/${file.name}`, content);
-
-        // Remove from default location
-        await remove(`${defaultRoot}/${book}/${chapter}/${file.name}`, defaultOptions);
-        count++;
       }
+    }
+    // Handle flat files (already in new format)
+    else if (entry.isFile && entry.name?.endsWith('.md')) {
+      // Skip chapter note files
+      if (entry.name.match(/^\d{2}-/)) continue;
+
+      // Read from flat location
+      const content = await readTextFile(`${defaultRoot}/${entry.name}`, defaultOptions);
+
+      // Write to target flat structure
+      const targetPath = `${targetDir}/${JOURNAL_ROOT}`;
+      const targetExists = await exists(targetPath);
+      if (!targetExists) {
+        await mkdir(targetPath, { recursive: true });
+      }
+      await writeTextFile(`${targetPath}/${entry.name}`, content);
+
+      // Remove from default location
+      await remove(`${defaultRoot}/${entry.name}`, defaultOptions);
+      count++;
     }
   }
 

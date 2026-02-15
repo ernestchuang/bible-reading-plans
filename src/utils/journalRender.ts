@@ -39,6 +39,11 @@ function renderWikilinks(text: string): string {
     const target = parts[0].trim();
     const display = parts[1]?.trim() || target;
 
+    // Bible chapter link: "01-Genesis/001" (new format with book numbers)
+    if (target.match(/^\d{2}-[A-Za-z0-9\s]+\/\d{3}$/)) {
+      return `<span class="text-purple-600 dark:text-purple-400 font-medium">[[${escapeHtml(display)}]]</span>`;
+    }
+
     // Bible passage link: "Romans 8#v28"
     if (target.match(/^[A-Z][a-zA-Z\s]+\d+#v\d+$/)) {
       return `<a href="#bible:${target}" class="text-indigo-600 dark:text-indigo-400 hover:underline">${escapeHtml(display)}</a>`;

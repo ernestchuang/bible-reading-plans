@@ -53,12 +53,12 @@ export function useJournalBrowser() {
       try {
         const all = await listAllEntries();
         const loaded: JournalEntry[] = [];
-        for (const { book, chapter, filename } of all) {
-          const raw = await readEntryFile(book, chapter, filename);
+        for (const { filename } of all) {
+          const raw = await readEntryFile(filename);
           const { meta, body } = parseFrontmatter(raw);
           loaded.push({
             filename,
-            path: `${book}/${chapter}/${filename}`,
+            path: filename,
             meta,
             body,
           });

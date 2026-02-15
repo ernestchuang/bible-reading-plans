@@ -21,6 +21,13 @@ A daily Bible reading app supporting multiple reading plans — including **Dr. 
   - Entries are tied to book and chapter, not the reading plan
   - Write-once / append-only with entry-to-entry linking (reply to a previous reflection)
   - Entries saved as individual `.md` files with YAML frontmatter
+  - **Obsidian integration** — journal entries are fully compatible with Obsidian vaults
+    - Flat structure: all entries in `journal/` directory, chronologically sorted by timestamp
+    - Auto-generated wikilinks: each entry links to a chapter note (e.g., `[[01-Genesis/001]]`)
+    - Chapter notes created on-demand: click wikilinks in Obsidian to create study notes
+    - Biblical order: books numbered 01-66 for proper sorting (Genesis → Revelation)
+    - Works with Obsidian's graph view, backlinks, Dataview queries, and tags
+    - Point app to your Obsidian vault folder in Settings → Journal Directory
   - **Standalone journal browser** (`/journal`) — master-detail view to browse all entries by date or by book/chapter, with links back to the reader
   - Chapter view (entries for the current book/chapter) and Date view (all entries by month) in the split pane
   - Built-in markdown formatting guide for new users

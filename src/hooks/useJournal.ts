@@ -7,6 +7,7 @@ import {
   listAllEntries,
 } from '../utils/journalFs';
 import { parseFrontmatter, serializeFrontmatter } from '../utils/frontmatter';
+import { formatChapterWikilink } from '../utils/bibleOrder';
 
 function makeTimestampFilename(): string {
   return (
@@ -29,11 +30,11 @@ async function loadEntriesForChapter(
   const filenames = await listEntryFiles(book, chapter);
   const entries: JournalEntry[] = [];
   for (const filename of filenames) {
-    const raw = await readEntryFile(book, chapter, filename);
+    const raw = await readEntryFile(filename);
     const { meta, body } = parseFrontmatter(raw);
     entries.push({
       filename,
-      path: `${book}/${chapter}/${filename}`,
+      path: filename,
       meta,
       body,
     });
@@ -84,12 +85,12 @@ export function useJournal(book: string | null, chapter: number | null) {
       try {
         const all = await listAllEntries();
         const loaded: JournalEntry[] = [];
-        for (const { book: b, chapter: c, filename } of all) {
-          const raw = await readEntryFile(b, c, filename);
+        for (const { filename } of all) {
+          const raw = await readEntryFile(filename);
           const { meta, body } = parseFrontmatter(raw);
           loaded.push({
             filename,
-            path: `${b}/${c}/${filename}`,
+            path: filename,
             meta,
             body,
           });
@@ -121,14 +122,19 @@ export function useJournal(book: string | null, chapter: number | null) {
       // Clean markdown (strip <br> tags from Milkdown)
       const cleanedMarkdown = cleanMarkdown(markdown);
 
-      // Prepend wikilink if this is a reply
-      const bodyWithReply = replyTo
-        ? `> In reply to [[${replyTo.replace(/\.md$/, '')}]]\n\n${cleanedMarkdown}`
-        : cleanedMarkdown;
+      // Generate chapter wikilink
+      const chapterWikilink = formatChapterWikilink(book, chapter);
+
+      // Build body: wikilink, reply link (if applicable), then content
+      let body = `${chapterWikilink}\n\n`;
+      if (replyTo) {
+        body += `> In reply to [[${replyTo.replace(/\.md$/, '')}]]\n\n`;
+      }
+      body += cleanedMarkdown;
 
       const filename = makeTimestampFilename();
-      const content = serializeFrontmatter(meta, bodyWithReply);
-      await writeEntryFile(book, chapter, filename, content);
+      const content = serializeFrontmatter(meta, body);
+      await writeEntryFile(filename, content);
 
       // Reload entries for this chapter
       const loaded = await loadEntriesForChapter(book, chapter);
