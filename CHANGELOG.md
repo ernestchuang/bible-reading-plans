@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-02-15
+
+### Fixed
+
+- **Journal preview shows actual content** — preview now skips auto-inserted wikilinks and reply lines to show the first line of user content instead of `[[01-Genesis/001]]`
+
 ## [2.1.0] - 2026-02-15
 
 ### Added
