@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-02-15
+
+### Fixed
+
+- **Journal display hides wikilinks** — viewing pane now strips auto-inserted chapter wikilinks and reply lines from rendered output (wikilinks remain in saved .md files for Obsidian)
+
 ## [2.1.1] - 2026-02-15
 
 ### Fixed
