@@ -16,11 +16,18 @@ function stripBr(s: string): string {
   return s.replace(/<br\s*\/?>/gi, '').trim();
 }
 
-/** Extract the first heading, or the first non-empty line if no heading exists. */
+/** Extract the first heading, or the first non-empty line if no heading exists. Skips wikilink-only lines. */
 export function getPreviewLine(markdown: string): string {
   for (const line of markdown.split('\n')) {
     const trimmed = stripBr(line.trim());
     if (!trimmed) continue;
+
+    // Skip wikilink-only lines (e.g., "[[01-Genesis/001]]")
+    if (trimmed.match(/^\[\[.+?\]\]$/)) continue;
+
+    // Skip reply-only lines (e.g., "> In reply to [[...]]")
+    if (trimmed.match(/^>\s*In reply to/)) continue;
+
     const heading = trimmed.match(/^#{1,6}\s+(.+)/);
     if (heading) return heading[1];
     return trimmed;
